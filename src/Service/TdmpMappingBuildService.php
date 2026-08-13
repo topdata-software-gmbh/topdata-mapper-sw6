@@ -132,7 +132,13 @@ class TdmpMappingBuildService
     private function _loadShopBrandMap(): array
     {
         $rows = $this->connection->fetchAllAssociative(
-            'SELECT LOWER(HEX(id)) AS brand_id, name FROM product_manufacturer WHERE name IS NOT NULL'
+            'SELECT LOWER(HEX(pm.id)) AS brand_id, MIN(pmt.name) AS name
+             FROM product_manufacturer pm
+             JOIN product_manufacturer_translation pmt
+               ON pmt.product_manufacturer_id = pm.id
+              AND pmt.product_manufacturer_version_id = pm.version_id
+             WHERE pmt.name IS NOT NULL
+             GROUP BY pm.id, pm.version_id'
         );
 
         $map = [];
