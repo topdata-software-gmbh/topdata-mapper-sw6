@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Topdata\TopdataMapperSW6\Command;
 
 use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -12,6 +13,7 @@ use Topdata\TopdataFoundationSW6\Command\AbstractTopdataCommand;
 use Topdata\TopdataFoundationSW6\Helper\CliStyle;
 use Topdata\TopdataFoundationSW6\Service\CliApiCredentialPrompter;
 use Topdata\TopdataFoundationSW6\Util\CliLogger;
+use Topdata\TopdataMapperSW6\Service\MappingBuildStats;
 use Topdata\TopdataMapperSW6\Service\TdmpMappingBuildService;
 use Topdata\TopdataMapperSW6\Service\TopdataMapperWebserviceV2Client;
 
@@ -51,19 +53,91 @@ class Command_TdmpImport extends AbstractTopdataCommand
 
         $mapping = strtolower((string)$input->getOption('mapping'));
 
-        match ($mapping) {
-            'product' => $this->mappingBuildService->buildProductMappings(),
-            'brand'   => $this->mappingBuildService->buildBrandMappings(),
+        $stats = match ($mapping) {
+            'product' => [$this->mappingBuildService->buildProductMappings()],
+            'brand'   => [$this->mappingBuildService->buildBrandMappings()],
             'all'     => $this->_buildAll(),
             default   => throw new \InvalidArgumentException("Unknown --mapping value '{$mapping}' (product|brand|all)"),
         };
 
+        $this->_printSummary($stats);
+
         return self::SUCCESS;
     }
 
-    private function _buildAll(): void
+    /**
+     * @return MappingBuildStats[]
+     */
+    private function _buildAll(): array
     {
-        $this->mappingBuildService->buildProductMappings();
-        $this->mappingBuildService->buildBrandMappings();
+        return [
+            $this->mappingBuildService->buildProductMappings(),
+            $this->mappingBuildService->buildBrandMappings(),
+        ];
+    }
+
+    /**
+     * Prints the pretty summary table of the import run.
+     *
+     * @param MappingBuildStats[] $stats
+     */
+    private function _printSummary(array $stats): void
+    {
+        $rows = [];
+        foreach ($stats as $stat) {
+            $rows[] = [
+                $this->_padCell('tdmp_' . $stat->entity),
+                $this->_padCell(number_format($stat->pages)),
+                $this->_padCell(number_format($stat->apiRows)),
+                $this->_padCell(number_format($stat->matched)),
+                $this->_padCell(number_format($stat->unmatched)),
+                $this->_padCell(sprintf('%.1f s', $stat->duration)),
+            ];
+        }
+
+        $rows[] = new TableSeparator();
+
+        $totals = $this->_sumStats($stats);
+        $rows[] = [
+            $this->_padCell('Total'),
+            $this->_padCell(number_format($totals['pages'])),
+            $this->_padCell(number_format($totals['apiRows'])),
+            $this->_padCell(number_format($totals['matched'])),
+            $this->_padCell(number_format($totals['unmatched'])),
+            $this->_padCell(sprintf('%.1f s', $totals['duration'])),
+        ];
+
+        $tbl = $this->cliStyle->createTable();
+        $tbl->setStyle('box-double');
+        $tbl->getStyle()->setPadType(STR_PAD_BOTH);
+        $tbl->setHeaders(['Mapping', 'Pages', 'API rows', 'Matched', 'Unmatched', 'Duration']);
+        $tbl->setRows($rows);
+        $tbl->setHeaderTitle(' Import Summary ');
+        $tbl->render();
+
+        $this->cliStyle->newLine();
+    }
+
+    /**
+     * @param MappingBuildStats[] $stats
+     * @return array{pages: int, apiRows: int, matched: int, unmatched: int, duration: float}
+     */
+    private function _sumStats(array $stats): array
+    {
+        return [
+            'pages'     => array_sum(array_map(fn(MappingBuildStats $s) => $s->pages, $stats)),
+            'apiRows'   => array_sum(array_map(fn(MappingBuildStats $s) => $s->apiRows, $stats)),
+            'matched'   => array_sum(array_map(fn(MappingBuildStats $s) => $s->matched, $stats)),
+            'unmatched' => array_sum(array_map(fn(MappingBuildStats $s) => $s->unmatched, $stats)),
+            'duration'  => array_sum(array_map(fn(MappingBuildStats $s) => $s->duration, $stats)),
+        ];
+    }
+
+    /**
+     * Adds extra horizontal padding around a table cell.
+     */
+    private function _padCell(string $cell): string
+    {
+        return ' ' . $cell . ' ';
     }
 }

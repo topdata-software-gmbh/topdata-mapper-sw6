@@ -37,25 +37,33 @@ class TdmpMappingBuildService
     /**
      * Rebuilds tdmp_product from /v2/mapping/product.
      */
-    public function buildProductMappings(string $language = 'de'): int
+    public function buildProductMappings(string $language = 'de'): MappingBuildStats
     {
-        $now  = (new \DateTime())->format('Y-m-d H:i:s');
-        $rows = [];
+        $t0        = microtime(true);
+        $now       = (new \DateTime())->format('Y-m-d H:i:s');
+        $rows      = [];
+        $unmatched = 0;
+        $apiRowsCount = 0;
 
-        $start = 0;
-        $page  = 0;
+        $offset = 0;
+        $page   = 0;
         while (true) {
             $page++;
-            $response = $this->mapperClient->getProductMappings(self::PRODUCT_TYPES, $start, self::PAGE_SIZE, $language);
+            $response = $this->mapperClient->getProductMappings(self::PRODUCT_TYPES, $offset, self::PAGE_SIZE, $language);
             $apiRows  = $response->rows ?? [];
 
             if (count($apiRows) === 0) {
                 break;
             }
+            $apiRowsCount += count($apiRows);
 
             foreach ($apiRows as $apiRow) {
                 $topdataId = (int)$apiRow->products_id;
-                foreach ($this->productMatcher->matchRow($apiRow) as $product) {
+                $matches   = $this->productMatcher->matchRow($apiRow);
+                if (count($matches) === 0) {
+                    $unmatched++;
+                }
+                foreach ($matches as $product) {
                     $rows[] = [
                         'product_id'         => $product['product_id'],
                         'product_version_id' => $product['product_version_id'],
@@ -69,40 +77,45 @@ class TdmpMappingBuildService
             if (!isset($response->pagination->has_more) || !$response->pagination->has_more) {
                 break;
             }
-            $start += self::PAGE_SIZE;
+            $offset += self::PAGE_SIZE;
         }
 
         $this->tdmpProductService->deleteAll();
-        $count = $this->tdmpProductService->insertMany($rows);
-        CliLogger::info("Built tdmp_product: {$count} rows across {$page} page(s).");
+        $matched = $this->tdmpProductService->insertMany($rows);
+        CliLogger::info("Built tdmp_product: {$matched} rows across {$page} page(s), {$unmatched} unmatched.");
 
-        return $count;
+        return new MappingBuildStats('product', $page, $apiRowsCount, $matched, $unmatched, microtime(true) - $t0);
     }
 
     /**
      * Rebuilds tdmp_brand from /v2/mapping/brand (matched by normalized name).
      */
-    public function buildBrandMappings(string $language = 'de'): int
+    public function buildBrandMappings(string $language = 'de'): MappingBuildStats
     {
-        $now  = (new \DateTime())->format('Y-m-d H:i:s');
-        $rows = [];
+        $t0        = microtime(true);
+        $now       = (new \DateTime())->format('Y-m-d H:i:s');
+        $rows      = [];
+        $unmatched = 0;
+        $apiRowsCount = 0;
 
         $shopBrandMap = $this->_loadShopBrandMap();
 
-        $start = 0;
-        $page  = 0;
+        $offset = 0;
+        $page   = 0;
         while (true) {
             $page++;
-            $response = $this->mapperClient->getBrandMappings($start, self::PAGE_SIZE, $language);
+            $response = $this->mapperClient->getBrandMappings($offset, self::PAGE_SIZE, $language);
             $apiRows  = $response->rows ?? [];
 
             if (count($apiRows) === 0) {
                 break;
             }
+            $apiRowsCount += count($apiRows);
 
             foreach ($apiRows as $apiRow) {
                 $brandId = $shopBrandMap[UtilIdentifierNormalizer::normalizeLabel((string)$apiRow->val)] ?? null;
                 if ($brandId === null) {
+                    $unmatched++;
                     continue;
                 }
                 $rows[] = [
@@ -116,14 +129,14 @@ class TdmpMappingBuildService
             if (!isset($response->pagination->has_more) || !$response->pagination->has_more) {
                 break;
             }
-            $start += self::PAGE_SIZE;
+            $offset += self::PAGE_SIZE;
         }
 
         $this->tdmpBrandService->deleteAll();
-        $count = $this->tdmpBrandService->insertMany($rows);
-        CliLogger::info("Built tdmp_brand: {$count} rows across {$page} page(s).");
+        $matched = $this->tdmpBrandService->insertMany($rows);
+        CliLogger::info("Built tdmp_brand: {$matched} rows across {$page} page(s), {$unmatched} unmatched.");
 
-        return $count;
+        return new MappingBuildStats('brand', $page, $apiRowsCount, $matched, $unmatched, microtime(true) - $t0);
     }
 
     /**
