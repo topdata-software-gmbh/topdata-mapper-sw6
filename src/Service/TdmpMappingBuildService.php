@@ -21,7 +21,7 @@ use Topdata\TopdataFoundationSW6\Util\CliLogger;
  */
 class TdmpMappingBuildService
 {
-    public const int PAGE_SIZE = 5000;
+    public const int PAGE_SIZE = 1000;
 
     public const array PRODUCT_TYPES = ['ean', 'oem', 'pcd', 'distributor'];
 
@@ -45,11 +45,11 @@ class TdmpMappingBuildService
         $unmatched = 0;
         $apiRowsCount = 0;
 
-        $offset = 0;
+        $cursor = null;
         $page   = 0;
         while (true) {
             $page++;
-            $response = $this->mapperClient->getProductMappings(self::PRODUCT_TYPES, $offset, self::PAGE_SIZE, $language);
+            $response = $this->mapperClient->getProductMappings(self::PRODUCT_TYPES, $cursor, self::PAGE_SIZE, $language);
             $apiRows  = $response->rows ?? [];
 
             if (count($apiRows) === 0) {
@@ -76,7 +76,10 @@ class TdmpMappingBuildService
             if (!isset($response->pagination->has_more) || !$response->pagination->has_more) {
                 break;
             }
-            $offset += self::PAGE_SIZE;
+            $cursor = $response->pagination->next_cursor ?? null;
+            if ($cursor === null) {
+                throw new \RuntimeException('Webservice reported has_more without next_cursor');
+            }
         }
 
         $this->tdmpProductService->deleteAll();

@@ -19,7 +19,13 @@ use Topdata\TopdataMapperSW6\Service\MappingBuildStats;
 use Topdata\TopdataMapperSW6\Service\TdmpMappingBuildService;
 use Topdata\TopdataMapperSW6\Service\TopdataMapperWebserviceV2Client;
 
-#[AsCommand(name: 'topdata:mapper:import', description: 'Build the Topdata↔SW6 mapping tables (tdmp_product, tdmp_brand)')]
+/**
+ * 08/2026 created
+ */
+#[AsCommand(
+    name: 'topdata:mapper:import',
+    description: 'Build the Topdata↔SW6 mapping tables (tdmp_product, tdmp_brand)'
+)]
 class Command_TdmpImport extends AbstractTopdataCommand
 {
     public function __construct(

@@ -15,18 +15,23 @@ class TopdataMapperWebserviceV2Client extends AbstractTopdataWebserviceV2Client
     }
 
     /**
-     * Fetch product identifier mappings (bulk, unified v2 pagination).
-     * Response payload: {rows: [{products_id, ean?, oem?, pcd?, distributor?}], pagination}.
+     * Fetch product identifier mappings (bulk, unified v2 keyset pagination).
+     * Response payload: {rows: [{products_id, ean?, oem?, pcd?, distributor?}], pagination: {cursor, limit, next_cursor, has_more}}.
      *
      * @param string[] $types identifier dimensions to include (ean/oem/pcd/distributor)
+     * @param int|null $cursor last products_id of the previous page (null = first page)
      */
-    public function getProductMappings(array $types, int $start, int $limit, string $language): mixed
+    public function getProductMappings(array $types, ?int $cursor, int $limit, string $language): mixed
     {
-        return $this->httpGet('/mapping/product', [
+        $params = [
             'types' => implode(',', $types),
-            'start' => $start,
             'limit' => $limit,
-        ], $language);
+        ];
+        if ($cursor !== null) {
+            $params['cursor'] = $cursor;
+        }
+
+        return $this->httpGet('/mapping/product', $params, $language);
     }
 
     /**

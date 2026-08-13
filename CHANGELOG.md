@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and this 
 ## [Unreleased]
 
 ### Changed
+- The mapper import now uses keyset pagination (`cursor` / `next_cursor`) instead
+  of `start` offsets when streaming `/v2/mapping/product` (brand import stays
+  offset-based). The client throws when the webservice reports `has_more`
+  without a `next_cursor`.
 - `tdmp_product` schema: `topdata_id` renamed to `top_id`; `product_version_id` is
   now always the live version (constant, see `TdmpProductService::LIVE_VERSION_HEX`)
   so the new FK `fk_tdmp_product_product (product_id, product_version_id) →
