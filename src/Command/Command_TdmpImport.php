@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Topdata\TopdataMapperSW6\Command;
 
 use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Helper\TableCell;
+use Symfony\Component\Console\Helper\TableCellStyle;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -86,12 +88,12 @@ class Command_TdmpImport extends AbstractTopdataCommand
         $rows = [];
         foreach ($stats as $stat) {
             $rows[] = [
-                $this->_padCell('tdmp_' . $stat->entity),
-                $this->_padCell(number_format($stat->pages)),
-                $this->_padCell(number_format($stat->apiRows)),
-                $this->_padCell(number_format($stat->matched)),
-                $this->_padCell(number_format($stat->unmatched)),
-                $this->_padCell(sprintf('%.1f s', $stat->duration)),
+                $this->_cell('tdmp_' . $stat->entity),
+                $this->_cell(number_format($stat->pages)),
+                $this->_cell(number_format($stat->apiRows)),
+                $this->_cell(number_format($stat->matched), $stat->matched > 0 ? ['fg' => 'green', 'options' => 'bold'] : null),
+                $this->_cell(number_format($stat->unmatched), $stat->unmatched > 0 ? ['fg' => 'yellow', 'options' => 'bold'] : null),
+                $this->_cell(sprintf('%.1f s', $stat->duration)),
             ];
         }
 
@@ -99,23 +101,42 @@ class Command_TdmpImport extends AbstractTopdataCommand
 
         $totals = $this->_sumStats($stats);
         $rows[] = [
-            $this->_padCell('Total'),
-            $this->_padCell(number_format($totals['pages'])),
-            $this->_padCell(number_format($totals['apiRows'])),
-            $this->_padCell(number_format($totals['matched'])),
-            $this->_padCell(number_format($totals['unmatched'])),
-            $this->_padCell(sprintf('%.1f s', $totals['duration'])),
+            $this->_cell('Total', ['fg' => 'white', 'options' => 'bold']),
+            $this->_cell(number_format($totals['pages']), ['options' => 'bold']),
+            $this->_cell(number_format($totals['apiRows']), ['options' => 'bold']),
+            $this->_cell(number_format($totals['matched']), ['options' => 'bold']),
+            $this->_cell(number_format($totals['unmatched']), ['options' => 'bold']),
+            $this->_cell(sprintf('%.1f s', $totals['duration']), ['options' => 'bold']),
         ];
 
+        $headers = [];
+        foreach (['Mapping', 'Pages', 'API rows', 'Matched', 'Unmatched', 'Duration'] as $header) {
+            $headers[] = $this->_cell($header, ['fg' => 'cyan', 'options' => 'bold']);
+        }
+
         $tbl = $this->cliStyle->createTable();
-        $tbl->setStyle('box-double');
-        $tbl->getStyle()->setPadType(STR_PAD_BOTH);
-        $tbl->setHeaders(['Mapping', 'Pages', 'API rows', 'Matched', 'Unmatched', 'Duration']);
+        $tbl->setStyle('box');
+        $tbl->getStyle()
+            ->setPadType(STR_PAD_BOTH)
+            ->setHeaderTitleFormat('<fg=black;bg=cyan;options=bold> %s </>');
+        $tbl->setHeaders([$headers]);
         $tbl->setRows($rows);
-        $tbl->setHeaderTitle(' Import Summary ');
+        $tbl->setHeaderTitle('Import Summary');
         $tbl->render();
 
         $this->cliStyle->newLine();
+    }
+
+    /**
+     * Creates a centered, padded table cell with optional styling.
+     *
+     * @param array{fg?: string, bg?: string, options?: string} $styleOptions
+     */
+    private function _cell(string $value, ?array $styleOptions = null): TableCell
+    {
+        $style = new TableCellStyle(array_merge(['align' => 'center'], $styleOptions ?? []));
+
+        return new TableCell($this->_padCell($value), ['style' => $style]);
     }
 
     /**
