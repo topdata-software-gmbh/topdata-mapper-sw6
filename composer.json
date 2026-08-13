@@ -1,0 +1,39 @@
+{
+    "name":        "topdata/mapper-sw6",
+    "description": "Topdata Mapper SW6",
+    "version":     "v1.0.0",
+    "type":        "shopware-platform-plugin",
+    "license":     "MIT",
+    "authors":     [
+        {
+            "name":     "TopData Software GmbH",
+            "homepage": "https://www.topdata.de",
+            "role":     "Manufacturer"
+        }
+    ],
+    "require":     {
+        "shopware/core": "6.7.*"
+    },
+    "extra":       {
+        "shopware-plugin-class": "Topdata\\TopdataMapperSW6\\TopdataMapperSW6",
+        "plugin-icon": "src/Resources/config/plugin.png",
+        "copyright": "(c) by TopData Software GmbH",
+        "label":                 {
+            "en-GB": "Topdata Mapper SW6",
+            "de-DE": "Topdata Mapper SW6"
+        },
+        "description":           {
+            "en-GB": "Topdata Mapper SW6",
+            "de-DE": "Topdata Mapper SW6"
+        },
+        "manufacturerLink":      {
+            "de-DE": "https://www.topdata.de",
+            "en-GB": "https://www.topdata.de"
+        }
+    },
+    "autoload":    {
+        "psr-4": {
+            "Topdata\\TopdataMapperSW6\\": "src/"
+        }
+    }
+}

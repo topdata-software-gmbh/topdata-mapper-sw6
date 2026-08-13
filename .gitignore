@@ -1,0 +1,16 @@
+# Ignore compiled administration and storefront build outputs
+src/Resources/public/administration/
+src/Resources/public/storefront/
+
+src/Resources/app/storefront/dist/
+vendor/
+node_modules/
+.idea/
+*.log
+
+
+
+# +----------------------------+
+# |    Keep .gitkeep files     |
+# +----------------------------+
+!/**/.gitkeep
