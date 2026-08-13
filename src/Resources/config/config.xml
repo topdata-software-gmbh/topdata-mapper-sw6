@@ -2,13 +2,21 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/shopware/platform/trunk/src/Core/System/SystemConfig/Schema/config.xsd">
     <card>
-        <title>Basic Configuration</title>
-        <title lang="de-DE">Grundeinstellungen</title>
-        
-        <input-field>
-            <name>example</name>
-            <label>Example Configuration</label>
-            <label lang="de-DE">Beispiel Konfiguration</label>
+        <title>Webservice</title>
+        <title lang="de-DE">Webservice</title>
+
+        <input-field type="text">
+            <name>apiBaseUrl</name>
+            <label>API Base URL</label>
+            <label lang="de-DE">API Basis-URL</label>
+            <placeholder>https://ws.topdata.de</placeholder>
+        </input-field>
+
+        <input-field type="text">
+            <name>apiKey</name>
+            <label>API Key (sk-...)</label>
+            <label lang="de-DE">API-Schlüssel (sk-...)</label>
+            <placeholder>sk-...</placeholder>
         </input-field>
     </card>
 </config>

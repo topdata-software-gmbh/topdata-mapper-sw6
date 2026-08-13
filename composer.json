@@ -1,6 +1,6 @@
 {
     "name":        "topdata/mapper-sw6",
-    "description": "Topdata Mapper SW6",
+    "description": "Topdata Mapper SW6 — owns the shared Topdata-ID ↔ SW6-ID mapping tables (tdmp_product, tdmp_brand); single writer consumed by TopFeed and TopFinder.",
     "version":     "v1.0.0",
     "type":        "shopware-platform-plugin",
     "license":     "MIT",
@@ -12,7 +12,9 @@
         }
     ],
     "require":     {
-        "shopware/core": "6.7.*"
+        "php": "^8.2",
+        "shopware/core": "6.7.*",
+        "topdata/topdata-foundation-sw6": "^1.4.0"
     },
     "extra":       {
         "shopware-plugin-class": "Topdata\\TopdataMapperSW6\\TopdataMapperSW6",
