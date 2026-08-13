@@ -1,7 +1,7 @@
 # DESIGN — Mapping API v2 contract, matching DSL, conflict handling
 
 **Date:** 2026-08-13
-**Status:** validated via brainstorm; settings page section still open
+**Status:** validated via brainstorm; matching-engine editor (Card B) designed — see §7; conflict-resolution UI (Card C) still open
 **Repos in scope:** `t2-webservice` (API), `topdata-mapper-sw6` (this plugin), `topdata-topfeed-sw6-v9` (TopFeed match will be REMOVED — this plugin replaces it), `topdata-topfinder-pro-sw6` (read-only consumer)
 
 ---
@@ -189,7 +189,35 @@ CREATE TABLE IF NOT EXISTS `tdmp_product_conflict_resolutions` (
 
 ## 6. Open items
 
-- **Settings page design** (postfinance pattern: admin module `topdata-mapper-settings`, `settingsItem` group plugins, ACL, snippets; sections: webservice credentials + matching strategy editor with presets, structured AND/OR builder, free-form DSL validation; provider/custom-field/property dropdowns; backend routes `/api/_action/topdata-mapper/validate-strategy` + `/providers`; conflict-resolution list with radio buttons).
+- **Conflict-resolution UI (Card C)** — separate admin module under the Products main navigation (`sw-product` parent, route `topdata.mapper.conflicts`); design still open. Settings-page sections were split during the Card B brainstorm: credentials stay as native config card, matching engine = settings module, conflicts = Products module.
 - Finder API `products_id` rename (consistency — target name `topdataProductId`) — flag, decide separately.
 - TopFeed config migration to DSL.
 - Whether a "manual mapping" feature (pin a mapping without a conflict) is wanted later — out of scope now.
+
+---
+
+## 7. Settings page — matching strategy editor (Card B, designed 2026-08-13)
+
+Admin module `topdata-mapper-settings` (`settingsItem` group `plugins`, ACL `topdata_mapper:read`/`update`, route `topdata.mapper.settings`).
+
+- **Card A — Webservice credentials:** keep the native config card (config.xml `apiBaseUrl`/`apiKey`, CLI prompt logic already reads config storage — no duplicated write paths); the module shows a read-only configured/not-configured status with a link to the native settings.
+- **Card B — Matching strategy:** designed below.
+- **Card C — Conflict resolution:** separate module under Products nav (design open, §6).
+
+### Card B decisions
+
+- **DSL string is the single source of truth.** Preset chips + visual builder are views over the current DSL string; presets are label→DSL-string constants, no separate state.
+- **Preset chips** (Default / Brand-scoped MPN / Article numbers only / EAN only / Custom): a chip is highlighted iff the current DSL equals its canonical string; typing flips the selector to "Custom" automatically (live detection — no read-only mode, no edit-button mode); re-clicking a chip restores the canonical preset string (one-click recovery from botched edits).
+- **Stacked, live-synced editors:** visual builder on top, DSL textarea below (labeled "DSL", not "Custom DSL"), both always editable; "last-edited side wins", each edit fully replaces the other side (no merge states).
+- **Sync architecture — single parser, single serializer:**
+  - Builder edit → small JS serializer → DSL string (grammar is tiny: 3-select leaf rows, AND groups, OR joiners).
+  - Textarea edit → debounced `POST /api/_action/topdata-mapper/validate-strategy` → response `{valid, ast, error}` → builder re-renders from the PHP-parsed AST.
+  - Parser lives once in PHP (authoritative — import fails loudly on bad DSL, §3), serializer once in JS — no drift.
+- **Leaf row selects:** shop field (`product.ean`, `product.manufacturer_number`, `product.manufacturer`, `product.product_number`, `property.<group>`, `customField.<name>`) → dimension (`ean`, `mpn`, `pcd`, `articleNumbers`, `topdataBrandIds`) → contextual variant select (provider dropdown for `articleNumbers.<provider>` fed by `/v2/mapping/provider`; property-group via `property_group` repository; custom field via custom field set repository).
+- **Validation:** pairing constraints client-side; backend re-validates authoritatively on save; inline error banner on save failure, success toast; debounced validation feedback while typing.
+- **Micro-UX:** copy icon on the DSL textarea (support emails DSL strings to shop owners).
+
+### Card B open items
+
+- **Pairing matrix:** hard-block semantically broken leaf pairings (e.g. `product.ean:mpn`) vs. warn-only.
+- **Dirty-check warning** before switching preset chips with unsaved edits — decide v1 or skip.
