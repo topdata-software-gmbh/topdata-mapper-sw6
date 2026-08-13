@@ -1,7 +1,7 @@
 # DESIGN — Mapping API v2 contract, matching DSL, conflict handling
 
 **Date:** 2026-08-13
-**Status:** validated via brainstorm; matching-engine editor (Card B) designed — see §7; conflict-resolution UI (Card C) still open
+**Status:** validated via brainstorm; settings page (Card B, §7) + conflict-resolution UI (Card C, §8) fully designed; all open items decided 2026-08-13
 **Repos in scope:** `t2-webservice` (API), `topdata-mapper-sw6` (this plugin), `topdata-topfeed-sw6-v9` (TopFeed match will be REMOVED — this plugin replaces it), `topdata-topfinder-pro-sw6` (read-only consumer)
 
 ---
@@ -154,7 +154,7 @@ CREATE TABLE IF NOT EXISTS `tdmp_product_conflict_resolutions` (
 ```
 
 - `product_version_id` pinned to `LIVE_VERSION_HEX` (same pattern as `tdmp_product`; row contract carries only `product_id`).
-- `topdata_product_ids` json = candidate list for the settings-page radio list.
+- `topdata_product_ids` json = candidate list for the settings-page radio list, **including per-candidate preview data (pcd/ean/mpn) captured at conflict-detection time** — the radio rows render from this json, no API lookups (decided 2026-08-13, §8).
 
 ### Import flow (per full-table-replace run)
 
@@ -189,9 +189,9 @@ CREATE TABLE IF NOT EXISTS `tdmp_product_conflict_resolutions` (
 
 ## 6. Open items
 
-- **Conflict-resolution UI (Card C)** — separate admin module under the Products main navigation (`sw-product` parent, route `topdata.mapper.conflicts`); design still open. Settings-page sections were split during the Card B brainstorm: credentials stay as native config card, matching engine = settings module, conflicts = Products module.
-- Finder API `products_id` rename (consistency — target name `topdataProductId`) — flag, decide separately.
-- TopFeed config migration to DSL.
+- **Conflict-resolution UI (Card C)** — separate admin module under the Products main navigation (`sw-product` parent, route `topdata.mapper.conflicts`); design settled 2026-08-13 — see §8. Settings-page sections were split during the Card B brainstorm: credentials stay as native config card, matching engine = settings module, conflicts = Products module.
+- Finder API `products_id` rename — **included in this effort** (decided 2026-08-13): rename the finder endpoint's field to `topdataProductId` and update TopFinder's parser in the same release (lockstep, nothing breaks).
+- TopFeed config migration to DSL — **not needed now** (decided 2026-08-13): on upgrade TopFeed v8 → v9 + mapper plugin, the shop owner configures the mapper strategy manually; an automated migration snippet could be a later iteration.
 - Whether a "manual mapping" feature (pin a mapping without a conflict) is wanted later — out of scope now.
 
 ---
@@ -200,7 +200,7 @@ CREATE TABLE IF NOT EXISTS `tdmp_product_conflict_resolutions` (
 
 Admin module `topdata-mapper-settings` (`settingsItem` group `plugins`, ACL `topdata_mapper:read`/`update`, route `topdata.mapper.settings`).
 
-- **Card A — Webservice credentials:** keep the native config card (config.xml `apiBaseUrl`/`apiKey`, CLI prompt logic already reads config storage — no duplicated write paths); the module shows a read-only configured/not-configured status with a link to the native settings.
+- **Card A — Webservice credentials (confirmed 2026-08-13):** keep the native config card (config.xml `apiBaseUrl`/`apiKey`, CLI prompt logic already reads config storage — no duplicated write paths); the module shows a read-only configured/not-configured status with a link to the native settings.
 - **Card B — Matching strategy:** designed below.
 - **Card C — Conflict resolution:** separate module under Products nav (design open, §6).
 
@@ -214,10 +214,33 @@ Admin module `topdata-mapper-settings` (`settingsItem` group `plugins`, ACL `top
   - Textarea edit → debounced `POST /api/_action/topdata-mapper/validate-strategy` → response `{valid, ast, error}` → builder re-renders from the PHP-parsed AST.
   - Parser lives once in PHP (authoritative — import fails loudly on bad DSL, §3), serializer once in JS — no drift.
 - **Leaf row selects:** shop field (`product.ean`, `product.manufacturer_number`, `product.manufacturer`, `product.product_number`, `property.<group>`, `customField.<name>`) → dimension (`ean`, `mpn`, `pcd`, `articleNumbers`, `topdataBrandIds`) → contextual variant select (provider dropdown for `articleNumbers.<provider>` fed by `/v2/mapping/provider`; property-group via `property_group` repository; custom field via custom field set repository).
+- **Pairing matrix (decided 2026-08-13):** single source of truth is a PHP class `src/Service/Dsl/DslPairingMatrix.php` (const map + `isAllowed()` / `allowedDimensions()`; provider-scoped `articleNumbers.<provider>` = prefix check on the `articleNumbers` cell). The frontend never hardcodes it — the matrix is served as JSON data via the strategy GET route (see Backend routes) and renders the dimension dropdowns from it. Matrix-violating pairs are **hard-blocked** (validation error, not warn) — a silently-never-matching leaf is worse than a loud error, same philosophy as the import failing loudly (§3).
+- **Backend routes (decided 2026-08-13):** controller `src/Controller/Api/TopdataMapperActionController.php`, `_routeScope: api`, called from admin via `Shopware.Service('httpClient')`:
+  - `GET /api/_action/topdata-mapper/strategy` → `{dsl, presets: [{key, label, dsl}], allowedPairs}` — module init, one round trip.
+  - `POST /api/_action/topdata-mapper/strategy` → body `{dsl}` → full validation (grammar + pairing matrix + provider-id existence) **before** any `SystemConfigService` write; violation → HTTP 400 with structured error (shop field, dimension, position) → nothing persisted; the settings page never writes config storage directly (authoritative write gate).
+  - `POST /api/_action/topdata-mapper/validate-strategy` → `{valid, ast, error}` — debounced live check while typing; AST re-renders the builder (single PHP parser).
+  - Backstop: import re-validates the stored strategy per run and fails loudly (§3) — catches configs written around the gate (CLI `config:set`, direct DB edit, TopFeed-migrated configs).
 - **Validation:** pairing constraints client-side; backend re-validates authoritatively on save; inline error banner on save failure, success toast; debounced validation feedback while typing.
 - **Micro-UX:** copy icon on the DSL textarea (support emails DSL strings to shop owners).
 
 ### Card B open items
 
-- **Pairing matrix:** hard-block semantically broken leaf pairings (e.g. `product.ean:mpn`) vs. warn-only.
-- **Dirty-check warning** before switching preset chips with unsaved edits — decide v1 or skip.
+(none — dirty-check warning **included in v1**, decided 2026-08-13: confirm dialog when clicking a preset chip while the current DSL differs from the last-loaded value; ~15 lines of JS.)
+
+---
+
+## 8. Conflict-resolution UI (Card C, designed 2026-08-13)
+
+Admin module `topdata-mapper-conflicts`, parent `sw-product` (top-level Products nav in 6.7), position directly after the product list, route `topdata.mapper.conflicts`, ACL `topdata_mapper:read` (view) / `topdata_mapper:update` (resolve).
+
+### Card C decisions
+
+- **Data access: no-DAL, action routes + `sw-data-grid`.** Enrichment (product number/name/thumbnail, candidate previews) is custom PHP either way — a DAL entity would only ride `sw-entity-listing` features (selection, bulk actions, inline edit) that radio-based resolution doesn't need. If a *mapping overview* list (browse/search `tdmp_product`) is ever wanted, a DAL entity can be introduced for that feature then.
+- **Server-side pagination/filtering via route params** — `sw-data-grid` `pagination` prop + `page-change`/`limit-change` events re-fetching `GET /api/_action/topdata-mapper/conflicts?page=&limit=&status=&search=`; conflicts can be numerous (lazy strategy across a big catalog).
+- **Resolve without re-import:** `POST /api/_action/topdata-mapper/resolve-conflict` `{productId, chosenTopdataProductId}` → status `user` + single UPDATE of that product's `tdmp_product` row, effective immediately. No full re-import needed to see the change.
+- **No menu count badge** on the nav entry — keep it simple.
+- Page layout: summary banner (last import time + pending/resolved counts), status tabs (All / Pending `auto` / Resolved `user`), search by product number/name, grid columns product (number + name + thumb) / candidates as radio list / status badge / updated-at, immediate POST on radio pick, empty-state hint that conflicts appear after `topdata:mapper:import`.
+
+### Card C open item
+
+(none — candidate previews **stored json only**, decided 2026-08-13: conflict-detection persists candidate ids + pcd/ean/mpn into `topdata_product_ids`; the radio list renders from it, zero API traffic.)
