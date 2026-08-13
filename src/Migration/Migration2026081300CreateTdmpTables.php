@@ -7,11 +7,11 @@ namespace Topdata\TopdataMapperSW6\Migration;
 use Doctrine\DBAL\Connection;
 use Shopware\Core\Framework\Migration\MigrationStep;
 
-class Migration2608130000CreateTdmpTables extends MigrationStep
+class Migration2026081300CreateTdmpTables extends MigrationStep
 {
     public function getCreationTimestamp(): int
     {
-        return 2608130000;
+        return 2026081300;
     }
 
     public function update(Connection $connection): void
