@@ -6,21 +6,23 @@ namespace Topdata\TopdataMapperSW6\Service;
 
 use Doctrine\DBAL\Connection;
 use Topdata\TopdataMapperSW6\Helper\UtilIdentifierNormalizer;
+use Topdata\TopdataMapperSW6\Service\Db\TdmpProductService;
 
 /**
  * Default product matcher: matches the `ean` dimension against Shopware
  * product.ean and the `oem` dimension against product.manufacturer_number (MPN).
  *
  * Used by the Mapper's own CLI build; TopFeed supplies its own matcher.
+ * Only live-version products are considered (see ProductMappingMatcherInterface).
  *
  * 08/2026 created
  */
 class ProductMappingMatcher_EanMpn implements ProductMappingMatcherInterface
 {
-    /** @var array<string, list<array{product_id: string, product_version_id: string}>>|null */
+    /** @var array<string, list<array{product_id: string}>>|null */
     private ?array $eanMap = null;
 
-    /** @var array<string, list<array{product_id: string, product_version_id: string}>>|null */
+    /** @var array<string, list<array{product_id: string}>>|null */
     private ?array $mpnMap = null;
 
     public function __construct(private readonly Connection $connection)
@@ -59,16 +61,17 @@ class ProductMappingMatcher_EanMpn implements ProductMappingMatcherInterface
     }
 
     /**
-     * @return array<string, list<array{product_id: string, product_version_id: string}>>
+     * @return array<string, list<array{product_id: string}>>
      */
     private function _loadIdentifierMap(string $kind): array
     {
         $column = $kind === 'mpn' ? 'manufacturer_number' : 'ean';
 
         $rows = $this->connection->fetchAllAssociative(
-            "SELECT LOWER(HEX(id)) AS product_id, LOWER(HEX(version_id)) AS product_version_id, {$column} AS identifier
+            "SELECT LOWER(HEX(id)) AS product_id, {$column} AS identifier
                FROM product
-              WHERE {$column} IS NOT NULL AND {$column} <> ''"
+              WHERE version_id = 0x" . TdmpProductService::LIVE_VERSION_HEX . "
+                AND {$column} IS NOT NULL AND {$column} <> ''"
         );
 
         $map = [];
@@ -79,10 +82,7 @@ class ProductMappingMatcher_EanMpn implements ProductMappingMatcherInterface
             if ($normalized === '') {
                 continue;
             }
-            $map[$normalized][] = [
-                'product_id'         => $row['product_id'],
-                'product_version_id' => $row['product_version_id'],
-            ];
+            $map[$normalized][] = ['product_id' => $row['product_id']];
         }
 
         return $map;

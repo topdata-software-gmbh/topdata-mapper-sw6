@@ -65,11 +65,10 @@ class TdmpMappingBuildService
                 }
                 foreach ($matches as $product) {
                     $rows[] = [
-                        'product_id'         => $product['product_id'],
-                        'product_version_id' => $product['product_version_id'],
-                        'topdata_id'         => $topdataId,
-                        'created_at'         => $now,
-                        'updated_at'         => $now,
+                        'product_id' => $product['product_id'],
+                        'top_id'     => $topdataId,
+                        'created_at' => $now,
+                        'updated_at' => $now,
                     ];
                 }
             }
@@ -120,7 +119,7 @@ class TdmpMappingBuildService
                 }
                 $rows[] = [
                     'brand_id'   => $brandId,
-                    'topdata_id' => (int)$apiRow->id,
+                    'top_id'     => (int)$apiRow->id,
                     'created_at' => $now,
                     'updated_at' => $now,
                 ];
