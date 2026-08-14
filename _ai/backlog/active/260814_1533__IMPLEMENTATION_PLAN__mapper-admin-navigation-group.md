@@ -24,7 +24,7 @@ The goal: a new navigation group **"Katalog > Topdata Mapper"** (German admin: *
 
 # Executive Summary
 
-1. **New parent module** `topdata-mapper` — navigation-only group entry under `sw-catalog` ("Topdata Mapper", position 10), its click path points at the new mappings page so the group label is always navigable.
+1. **New parent module** `topdata-mapper` — group entry under `sw-catalogue` ("Topdata Mapper", position 10); its `index` route renders the mappings page component so the group label is always navigable.
 2. **New module** `topdata-mapper-mappings` — a read-only browser page with two tabs:
    - *Products*: `sw-data-grid` over `tdmp_product` joined with `product`/`product_translation`/`media_thumbnail` (product number, name, thumbnail, Topdata article id, created/updated), server-side paginated + search (product number/name/Topdata id).
    - *Brands*: `sw-data-grid` over `tdmp_brand` joined with `product_manufacturer`/`product_manufacturer_translation` (manufacturer name, Topdata brand id, created/updated), server-side paginated + search.
@@ -317,14 +317,14 @@ public function listBrandMappingsAction(Request $request, Context $context): Jso
 
 ## 3.1 `src/Resources/app/administration/src/module/topdata-mapper/index.js` [NEW FILE]
 
-Navigation-only parent module. It has no own page — its navigation `path` points at the first child (the mappings browser) so the group label is clickable. The child modules attach via `parent: 'topdata-mapper'`.
+Parent group module. Its single `index` route (rendering the mappings page component) exists only so the module registers at all — Shopware's module factory rejects modules with zero routes (`routes: {}` aborts registration, so the group's navigation would never reach the menu). The navigation `path` points at that own route; the child modules attach via `parent: 'topdata-mapper'`.
 
 ```js
 // ---- snippets (shared nav labels for children) ----
 import './snippet/en-GB.json';
 import './snippet/de-DE.json';
 
-// ---- register module (navigation group only) ----
+// ---- register module (navigation group with a real index route) ----
 Shopware.Module.register('topdata-mapper', {
     type: 'plugin',
     name: 'TopdataMapperSW6',
@@ -333,20 +333,34 @@ Shopware.Module.register('topdata-mapper', {
     color: '#ff3d58',
     icon: 'regular-plug',
 
-    routes: {},
+    routes: {
+        index: {
+            component: 'topdata-mapper-mappings',
+            path: 'index',
+            meta: {
+                privilege: 'topdata_mapper:read',
+            },
+        },
+    },
 
     navigation: [
         {
+            id: 'topdata-mapper',
             label: 'TopdataMapperSW6.navigation.title',
             color: '#ff3d58',
-            path: 'topdata.mapper.mappings.index',
+            path: 'topdata.mapper.index',
             icon: 'regular-plug',
             position: 10,
-            parent: 'sw-catalog',
+            parent: 'sw-catalogue',
+            privilege: 'topdata_mapper:read',
         },
     ],
 });
 ```
+
+> The `id: 'topdata-mapper'` is **required**: `FlatTree` attaches children by matching their `parent` against the ancestor's `id` (falling back to `path`), so without it the Mappings and Conflicts entries would be orphaned and disappear from the menu. The parent group id is `sw-catalogue` (registered by the core `sw-product` module) — not `sw-catalog`.
+>
+> All three navigation entries (group, Mappings, Conflicts) carry `privilege: 'topdata_mapper:read'` — the admin menu's `getChildren()` only hides entries **with** a privilege, so an entry without one is visible to every user.
 
 ## 3.2 `src/Resources/app/administration/src/module/topdata-mapper/snippet/en-GB.json` [NEW FILE]
 
@@ -417,12 +431,13 @@ Shopware.Module.register('topdata-mapper-mappings', {
             icon: 'regular-list',
             position: 10,
             parent: 'topdata-mapper',
+            privilege: 'topdata_mapper:read',
         },
     ],
 });
 ```
 
-> Note: **no** `meta.parentPath` on either child route — the parent module is route-less (`topdata.mapper.index` does not exist) and a dangling `parentPath` would break breadcrumb/browser-title resolution. Without it the breadcrumb simply shows the page title; the navigation tree still renders the group correctly.
+> Note: **no** `meta.parentPath` on either child route — the breadcrumb simply shows the page title (the parent module's `index` route is a pure group landing page, not a meaningful breadcrumb ancestor). The navigation tree renders the group correctly regardless.
 
 ## 4.2 `src/Resources/app/administration/src/module/topdata-mapper-mappings/page/topdata-mapper-mappings/index.js` [NEW FILE]
 
@@ -803,12 +818,13 @@ Two changes: navigation `parent` `'sw-product'` → `'topdata-mapper'`, and the 
 
     navigation: [
         {
-            label: 'TopdataMapperSW6.conflicts.title',
+            label: 'TopdataMapperSW6.conflicts.navLabel',
             color: '#ff3d58',
             path: 'topdata.mapper.conflicts.index',
             icon: 'regular-plug',
             position: 20,
             parent: 'topdata-mapper',
+            privilege: 'topdata_mapper:read',
         },
     ],
 ```
@@ -820,7 +836,7 @@ And add a short nav label snippet (the current `conflicts.title` is "Topdata map
 
 …and use `label: 'TopdataMapperSW6.conflicts.navLabel'` in the navigation entry above.
 
-> The conflicts page previously used `meta.parentPath: 'sw.product.index'`; this is **removed** together with the move (the new parent module has no route to point to, see 4.1).
+> The conflicts page previously used `meta.parentPath: 'sw.product.index'`; this is **removed** together with the move (children deliberately skip `parentPath`, see 4.1).
 
 ---
 
