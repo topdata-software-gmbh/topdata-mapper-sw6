@@ -1,5 +1,5 @@
 // ---- page ----
-import './page/topdata-mapper-settings/topdata-mapper-settings';
+import './page/topdata-mapper-settings';
 
 // ---- snippets ----
 import './snippet/en-GB.json';
@@ -17,7 +17,7 @@ Shopware.Module.register('topdata-mapper-settings', {
     settingsItem: [
         {
             group: 'plugins',
-            to: 'topdata.mapper.settings',
+            to: 'topdata.mapper.settings.settings',
             icon: 'regular-plug',
             name: 'TopdataMapperSW6.settings.title',
             label: 'TopdataMapperSW6.settings.title',

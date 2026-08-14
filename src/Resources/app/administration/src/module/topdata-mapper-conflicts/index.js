@@ -1,5 +1,5 @@
 // ---- page ----
-import './page/topdata-mapper-conflicts/topdata-mapper-conflicts';
+import './page/topdata-mapper-conflicts';
 
 // ---- snippets ----
 import './snippet/en-GB.json';
@@ -29,7 +29,7 @@ Shopware.Module.register('topdata-mapper-conflicts', {
         {
             label: 'TopdataMapperSW6.conflicts.title',
             color: '#ff3d58',
-            path: 'topdata.mapper.conflicts',
+            path: 'topdata.mapper.conflicts.index',
             icon: 'regular-plug',
             position: 20,
             parent: 'sw-product',

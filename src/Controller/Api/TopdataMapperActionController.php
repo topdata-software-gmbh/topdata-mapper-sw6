@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Topdata\TopdataMapperSW6\Controller\Api;
 
-use Shopware\Core\Framework\Api\Acl\AclService;
 use Shopware\Core\Framework\Api\Exception\MissingPrivilegeException;
 use Shopware\Core\Framework\Context;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -45,7 +44,6 @@ class TopdataMapperActionController extends AbstractController
         private readonly DslSerializer                    $dslSerializer,
         private readonly TdmpConflictResolutionService    $conflictResolutionService,
         private readonly TopdataMapperWebserviceV2Client  $mapperClient,
-        private readonly AclService                       $aclService,
     ) {
     }
 
@@ -184,7 +182,9 @@ class TopdataMapperActionController extends AbstractController
      */
     private function _assertPrivilege(string $privilege, Context $context): void
     {
-        $this->aclService->validate([$privilege], $context);
+        if (!$context->isAllowed($privilege)) {
+            throw new MissingPrivilegeException([$privilege]);
+        }
     }
 
     /**
@@ -201,7 +201,7 @@ class TopdataMapperActionController extends AbstractController
         }
 
         try {
-            $response = $this->mapperClient->getProviders(0, self::PROVIDER_LIST_LIMIT, 'de');
+            $response = $this->mapperClient->getProvidersFast(0, self::PROVIDER_LIST_LIMIT, 'de');
         } catch (\Throwable $e) {
             return [];
         }
