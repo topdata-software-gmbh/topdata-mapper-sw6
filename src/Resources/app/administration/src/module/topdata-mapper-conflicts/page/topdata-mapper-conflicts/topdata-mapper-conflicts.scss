@@ -1,0 +1,48 @@
+.topdata-mapper-conflicts {
+    &__summary {
+        p {
+            margin: 0;
+        }
+    }
+
+    &__search {
+        margin-bottom: 0;
+    }
+
+    &__product {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    &__thumb {
+        width: 40px;
+        height: 40px;
+        object-fit: cover;
+        border-radius: 4px;
+        flex-shrink: 0;
+    }
+
+    &__product-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    &__candidates {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    &__candidate {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+
+        em {
+            color: #758ca3;
+            font-style: normal;
+        }
+    }
+}

@@ -7,7 +7,7 @@ namespace Topdata\TopdataMapperSW6\Service\Db;
 use Doctrine\DBAL\Connection;
 
 /**
- * Raw DBAL access to `tdmp_product` (Topdata products_id ↔ SW6 product id).
+ * Raw DBAL access to `tdmp_product` (Topdata topdata_product_id ↔ SW6 product id).
  *
  * The Mapper plugin is the single writer; TopFeed and TopFinder read only.
  *
@@ -30,7 +30,7 @@ class TdmpProductService
     }
 
     /**
-     * @param array<int, array{product_id: string, top_id: int, created_at: string, updated_at: string}> $rows product_id is hex (no 0x prefix)
+     * @param array<int, array{product_id: string, topdata_product_id: int, created_at: string, updated_at: string}> $rows product_id is hex (no 0x prefix)
      */
     public function insertMany(array $rows): int
     {
@@ -42,13 +42,13 @@ class TdmpProductService
                     "(0x%s, 0x%s, %d, '%s', '%s')",
                     $row['product_id'],
                     self::LIVE_VERSION_HEX,
-                    $row['top_id'],
+                    $row['topdata_product_id'],
                     $row['created_at'],
                     $row['updated_at']
                 );
             }
             $inserted += $this->connection->executeStatement(
-                'INSERT INTO tdmp_product (product_id, product_version_id, top_id, created_at, updated_at) VALUES ' . implode(',', $values)
+                'INSERT INTO tdmp_product (product_id, product_version_id, topdata_product_id, created_at, updated_at) VALUES ' . implode(',', $values)
             );
         }
 
@@ -66,19 +66,19 @@ class TdmpProductService
     }
 
     /**
-     * Map top_id (int) → list of SW6 product ids (hex).
+     * Map topdata_product_id (int) → list of SW6 product ids (hex).
      *
      * @return array<int, list<string>>
      */
     public function getProductMap(): array
     {
         $rows = $this->connection->fetchAllAssociative(
-            'SELECT top_id, LOWER(HEX(product_id)) AS product_id FROM tdmp_product'
+            'SELECT topdata_product_id, LOWER(HEX(product_id)) AS product_id FROM tdmp_product'
         );
 
         $map = [];
         foreach ($rows as $row) {
-            $map[(int)$row['top_id']][] = $row['product_id'];
+            $map[(int)$row['topdata_product_id']][] = $row['product_id'];
         }
 
         return $map;

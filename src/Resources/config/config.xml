@@ -19,4 +19,17 @@
             <placeholder>sk-...</placeholder>
         </input-field>
     </card>
+
+    <card>
+        <title>Matching strategy</title>
+        <title lang="de-DE">Matching-Strategie</title>
+
+        <input-field type="textarea">
+            <name>matchingStrategy</name>
+            <label>Matching DSL (advanced — prefer the settings page editor)</label>
+            <label lang="de-DE">Matching-DSL (fortgeschritten — bevorzugt den Editor der Einstellungen nutzen)</label>
+            <helpText>Set algebra over identifier dimensions: product.ean:ean | product.manufacturer_number:mpn | product.manufacturer_number:pcd | product.product_number:articleNumbers</helpText>
+            <helpText lang="de-DE">Mengenalgebra über Identifikator-Dimensionen: product.ean:ean | product.manufacturer_number:mpn | product.manufacturer_number:pcd | product.product_number:articleNumbers</helpText>
+        </input-field>
+    </card>
 </config>

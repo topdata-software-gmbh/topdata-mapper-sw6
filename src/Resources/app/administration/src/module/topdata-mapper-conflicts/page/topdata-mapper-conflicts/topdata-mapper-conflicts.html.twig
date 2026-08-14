@@ -1,0 +1,148 @@
+{% block topdata_mapper_conflicts %}
+    <sw-page class="topdata-mapper-conflicts">
+        <template #smart-bar-header>
+            <h2>{{ $tc('TopdataMapperSW6.conflicts.title') }}</h2>
+        </template>
+
+        <template #content>
+            {% block topdata_mapper_conflicts_summary %}
+                <sw-card class="topdata-mapper-conflicts__summary">
+                    <sw-container columns="1fr 1fr 1fr" align="center" gap="0 24px">
+                        <p>
+                            <strong>{{ $tc('TopdataMapperSW6.conflicts.summary.lastImport') }}:</strong>
+                            {{ stats.lastImportAt || $tc('TopdataMapperSW6.conflicts.summary.never') }}
+                        </p>
+                        <p>
+                            <strong>{{ $tc('TopdataMapperSW6.conflicts.summary.pending') }}:</strong>
+                            {{ stats.pending }}
+                        </p>
+                        <p>
+                            <strong>{{ $tc('TopdataMapperSW6.conflicts.summary.resolved') }}:</strong>
+                            {{ stats.resolved }}
+                        </p>
+                    </sw-container>
+                </sw-card>
+            {% endblock %}
+
+            {% block topdata_mapper_conflicts_list %}
+                <sw-card :title="$tc('TopdataMapperSW6.conflicts.list.title')">
+                    <template #toolbar>
+                        <sw-container columns="1fr 240px" align="center" gap="0 16px">
+                            <sw-tabs
+                                default-item="all"
+                                @new-item-active="onStatusChange"
+                            >
+                                <sw-tabs-item name="all">
+                                    {{ $tc('TopdataMapperSW6.conflicts.tabs.all') }}
+                                </sw-tabs-item>
+                                <sw-tabs-item name="pending">
+                                    {{ $tc('TopdataMapperSW6.conflicts.tabs.pending') }}
+                                </sw-tabs-item>
+                                <sw-tabs-item name="resolved">
+                                    {{ $tc('TopdataMapperSW6.conflicts.tabs.resolved') }}
+                                </sw-tabs-item>
+                            </sw-tabs>
+
+                            <sw-text-field
+                                v-model="search"
+                                class="topdata-mapper-conflicts__search"
+                                :placeholder="$tc('TopdataMapperSW6.conflicts.searchPlaceholder')"
+                                @update:value="onSearchChange"
+                            />
+                        </sw-container>
+                    </template>
+
+                    <sw-data-grid
+                        :dataSource="rows"
+                        :columns="columns"
+                        :isLoading="isLoading"
+                        :showSelection="false"
+                        :showSettings="false"
+                        :allowColumnEdit="false"
+                        :compactMode="false"
+                        :pagination="{ page, limit, total }"
+                        @page-change="onPageChange"
+                        @limit-change="onLimitChange"
+                    >
+                        {% block topdata_mapper_conflicts_grid_product %}
+                            <template #column-productNumber="{ item }">
+                                <div class="topdata-mapper-conflicts__product">
+                                    <img
+                                        v-if="item.thumbnailUrl"
+                                        :src="item.thumbnailUrl"
+                                        class="topdata-mapper-conflicts__thumb"
+                                        alt=""
+                                    >
+                                    <div class="topdata-mapper-conflicts__product-info">
+                                        <strong>{{ item.productNumber }}</strong>
+                                        <span>{{ item.productName }}</span>
+                                    </div>
+                                </div>
+                            </template>
+                        {% endblock %}
+
+                        {% block topdata_mapper_conflicts_grid_candidates %}
+                            <template #column-candidates="{ item }">
+                                <div class="topdata-mapper-conflicts__candidates">
+                                    <label
+                                        v-for="candidate in item.candidates"
+                                        :key="candidate.id"
+                                        class="topdata-mapper-conflicts__candidate"
+                                    >
+                                        <input
+                                            type="radio"
+                                            :name="'conflict-' + item.productId"
+                                            :value="candidate.id"
+                                            :checked="candidate.id === item.chosenTopdataProductId"
+                                            :disabled="resolvingKey !== null"
+                                            @change="resolve(item, candidate)"
+                                        >
+                                        <span>
+                                            Topdata #{{ candidate.id }}
+                                            <em v-if="candidateHint(candidate)">({{ candidateHint(candidate) }})</em>
+                                        </span>
+                                    </label>
+                                </div>
+                            </template>
+                        {% endblock %}
+
+                        {% block topdata_mapper_conflicts_grid_status %}
+                            <template #column-status="{ item }">
+                                <sw-label
+                                    :variant="statusVariant(item.status)"
+                                    appearance="pill"
+                                >
+                                    {{ statusLabel(item.status) }}
+                                </sw-label>
+                            </template>
+                        {% endblock %}
+
+                        {% block topdata_mapper_conflicts_grid_updated_at %}
+                            <template #column-updatedAt="{ item }">
+                                {{ item.updatedAt }}
+                            </template>
+                        {% endblock %}
+
+                        <template #pagination>
+                            <sw-pagination
+                                :page="page"
+                                :limit="limit"
+                                :total="total"
+                                :total-visible="7"
+                                @page-change="onPageChange"
+                                @limit-change="onLimitChange"
+                            />
+                        </template>
+                        </sw-data-grid>
+
+                    <sw-empty-state
+                        v-if="!isLoading && rows.length === 0"
+                        :title="$tc('TopdataMapperSW6.conflicts.empty.title')"
+                        :subline="$tc('TopdataMapperSW6.conflicts.empty.message')"
+                        icon="regular-plug"
+                    />
+                </sw-card>
+            {% endblock %}
+        </template>
+    </sw-page>
+{% endblock %}

@@ -1,0 +1,43 @@
+{
+    "TopdataMapperSW6": {
+        "conflicts": {
+            "title": "Topdata-Mapping-Konflikte",
+            "description": "Auflösung von Produkten, die mehrere Topdata-Artikel matchen",
+            "summary": {
+                "lastImport": "Letzter Import",
+                "never": "Noch nie",
+                "pending": "Offen",
+                "resolved": "Gelöst"
+            },
+            "list": {
+                "title": "Konflikte"
+            },
+            "tabs": {
+                "all": "Alle",
+                "pending": "Offen",
+                "resolved": "Gelöst"
+            },
+            "searchPlaceholder": "Suche nach Artikelnummer oder Name ...",
+            "columns": {
+                "product": "Produkt",
+                "candidates": "Kandidaten",
+                "status": "Status",
+                "updatedAt": "Aktualisiert"
+            },
+            "status": {
+                "pending": "Offen",
+                "resolved": "Gelöst"
+            },
+            "resolve": {
+                "successTitle": "Konflikt gelöst",
+                "successMessage": "Das Produkt ist jetzt Topdata-Artikel #{number} zugeordnet — sofort wirksam.",
+                "failedTitle": "Auflösung fehlgeschlagen",
+                "failedMessage": "Die Zuordnung konnte nicht gespeichert werden."
+            },
+            "empty": {
+                "title": "Keine Konflikte",
+                "message": "Konflikte erscheinen nach einem Import (topdata:mapper:import), wenn ein Produkt mehrere Topdata-Artikel matcht."
+            }
+        }
+    }
+}

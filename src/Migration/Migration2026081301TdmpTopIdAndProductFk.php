@@ -8,13 +8,13 @@ use Doctrine\DBAL\Connection;
 use Shopware\Core\Framework\Migration\MigrationStep;
 
 /**
- * Migrates the pre-1301 tdmp_product / tdmp_brand schema to the new one:
+ * Migrates the pre-1301 tdmp_product / tdmp_brand schema to the final one:
  *
  * - tdmp_product: `product_version_id` is pinned to the live version
  *   (0x0fa91ce3e96a4bc2be4bd9ce752c3425) and an FK
  *   (product_id, product_version_id) → product(id, version_id) ON DELETE CASCADE
- *   is added; `topdata_id` is renamed to `top_id`.
- * - tdmp_brand: `topdata_id` is renamed to `top_id`.
+ *   is added; `topdata_id` is renamed to `topdata_product_id`.
+ * - tdmp_brand: `topdata_id` is renamed to `topdata_brand_id`.
  *
  * The FK is composite because Shopware products are versioned: the live product
  * row is (id, LIVE_VERSION), draft rows carry random version ids. Pinning the
@@ -22,7 +22,7 @@ use Shopware\Core\Framework\Migration\MigrationStep;
  * draft rows are dropped during a version merge.
  *
  * Idempotent via information_schema checks; a no-op on fresh installs where
- * Migration2026081300 already created the new schema.
+ * Migration2026081300 already created the final schema.
  *
  * 08/2026 created
  */
@@ -62,7 +62,7 @@ class Migration2026081301TdmpTopIdAndProductFk extends MigrationStep
             'UPDATE tdmp_product SET product_version_id = 0x' . self::LIVE_VERSION_HEX
         );
 
-        // Drop rows duplicated by the version pin (same product + top_id, different version)
+        // Drop rows duplicated by the version pin (same product + topdata_product_id, different version)
         $connection->executeStatement('
             DELETE t1 FROM tdmp_product t1 INNER JOIN tdmp_product t2
                ON t1.product_id = t2.product_id
@@ -75,11 +75,11 @@ class Migration2026081301TdmpTopIdAndProductFk extends MigrationStep
         if ($this->_indexExists($connection, 'tdmp_product', 'idx_tdmp_product_topdata_id')) {
             $connection->executeStatement('ALTER TABLE tdmp_product DROP INDEX idx_tdmp_product_topdata_id');
         }
-        $connection->executeStatement('ALTER TABLE tdmp_product CHANGE COLUMN `topdata_id` `top_id` bigint(20) NOT NULL');
+        $connection->executeStatement('ALTER TABLE tdmp_product CHANGE COLUMN `topdata_id` `topdata_product_id` bigint(20) NOT NULL');
         $connection->executeStatement('
             ALTER TABLE tdmp_product
-                ADD PRIMARY KEY (`product_id`, `product_version_id`, `top_id`),
-                ADD KEY `idx_tdmp_product_top_id` (`top_id`)
+                ADD PRIMARY KEY (`product_id`, `product_version_id`, `topdata_product_id`),
+                ADD KEY `idx_tdmp_product_topdata_product_id` (`topdata_product_id`)
         ');
 
         if (!$this->_foreignKeyExists($connection, 'tdmp_product', 'fk_tdmp_product_product')) {
@@ -95,18 +95,18 @@ class Migration2026081301TdmpTopIdAndProductFk extends MigrationStep
     private function _migrateTdmpBrand(Connection $connection): void
     {
         if (!$this->_columnExists($connection, 'tdmp_brand', 'topdata_id')) {
-            return; // already on the new schema
+            return; // already on the final schema
         }
 
         $connection->executeStatement('ALTER TABLE tdmp_brand DROP PRIMARY KEY');
         if ($this->_indexExists($connection, 'tdmp_brand', 'idx_tdmp_brand_topdata_id')) {
             $connection->executeStatement('ALTER TABLE tdmp_brand DROP INDEX idx_tdmp_brand_topdata_id');
         }
-        $connection->executeStatement('ALTER TABLE tdmp_brand CHANGE COLUMN `topdata_id` `top_id` bigint(20) NOT NULL');
+        $connection->executeStatement('ALTER TABLE tdmp_brand CHANGE COLUMN `topdata_id` `topdata_brand_id` bigint(20) NOT NULL');
         $connection->executeStatement('
             ALTER TABLE tdmp_brand
-                ADD PRIMARY KEY (`brand_id`, `top_id`),
-                ADD KEY `idx_tdmp_brand_top_id` (`top_id`)
+                ADD PRIMARY KEY (`brand_id`, `topdata_brand_id`),
+                ADD KEY `idx_tdmp_brand_topdata_brand_id` (`topdata_brand_id`)
         ');
     }
 

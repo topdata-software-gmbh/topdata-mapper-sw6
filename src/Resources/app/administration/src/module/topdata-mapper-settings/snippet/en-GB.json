@@ -1,0 +1,77 @@
+{
+    "TopdataMapperSW6": {
+        "settings": {
+            "title": "Topdata Mapper",
+            "description": "Mapping strategy editor",
+            "credentials": {
+                "title": "Webservice credentials",
+                "subtitle": "Native plugin configuration — managed in the plugin config, displayed here as read-only status.",
+                "status": "Status:",
+                "configured": "Configured",
+                "notConfigured": "Not configured",
+                "openConfig": "Open plugin config"
+            },
+            "strategy": {
+                "title": "Matching strategy",
+                "subtitle": "Set algebra over identifier dimensions — which Shopware field matches which Topdata identifier. The DSL string is the single source of truth."
+            },
+            "builder": {
+                "shopField": "Shopware field",
+                "dimension": "Topdata identifier",
+                "provider": "Provider",
+                "allProviders": "All providers",
+                "propertyGroup": "Property group",
+                "customField": "Custom field",
+                "addLeaf": "Add condition (AND)",
+                "addGroup": "Add condition group (OR)",
+                "orSeparator": "— or —"
+            },
+            "dsl": {
+                "label": "DSL",
+                "helpText": "Set algebra: '&' within a group (AND), '|' between groups (OR). Example: product.ean:ean | product.manufacturer_number:mpn",
+                "copy": "Copy"
+            },
+            "validation": {
+                "title": "Invalid strategy",
+                "shopField": "Shop field",
+                "dimension": "Dimension",
+                "position": "Position",
+                "unreachable": "Could not reach the validation endpoint."
+            },
+            "dirtyConfirm": {
+                "title": "Unsaved changes",
+                "message": "Your current strategy differs from the last loaded value. Applying the preset will discard your edits — are you sure?",
+                "confirm": "Apply preset",
+                "cancel": "Cancel"
+            },
+            "save": {
+                "button": "Save strategy",
+                "successTitle": "Strategy saved",
+                "successMessage": "The matching strategy was validated and saved.",
+                "failedTitle": "Save failed",
+                "failedGeneric": "Could not save the strategy — please check the connection."
+            },
+            "copy": {
+                "title": "DSL copied",
+                "message": "The DSL string was copied to the clipboard."
+            },
+            "shopField": {
+                "product": {
+                    "ean": "Product: EAN field (product.ean)",
+                    "manufacturer_number": "Product: manufacturer number (product.manufacturer_number)",
+                    "manufacturer": "Product: manufacturer (product.manufacturer)",
+                    "product_number": "Product: product number (product.product_number)"
+                },
+                "property": "Property group (property.<group>)",
+                "customField": "Custom field (customField.<name>)"
+            },
+            "dimension": {
+                "ean": "ean",
+                "mpn": "mpn",
+                "pcd": "pcd",
+                "articleNumbers": "articleNumbers",
+                "topdataBrandIds": "topdataBrandIds"
+            }
+        }
+    }
+}

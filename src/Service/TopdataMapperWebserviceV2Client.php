@@ -16,10 +16,12 @@ class TopdataMapperWebserviceV2Client extends AbstractTopdataWebserviceV2Client
 
     /**
      * Fetch product identifier mappings (bulk, unified v2 keyset pagination).
-     * Response payload: {rows: [{products_id, ean?, oem?, pcd?, distributor?}], pagination: {cursor, limit, next_cursor, has_more}}.
+     * Response payload: {rows: [{topdataProductId, topdataBrandIds?, ean?, mpn?, pcd?, articleNumbers?}], pagination: {cursor, limit, next_cursor, has_more}}.
+     * topdataBrandIds is present iff mpn is requested; articleNumbers is an
+     * object keyed by provider id → per-provider article-number list.
      *
-     * @param string[] $types identifier dimensions to include (ean/oem/pcd/distributor)
-     * @param int|null $cursor last products_id of the previous page (null = first page)
+     * @param string[] $types identifier dimensions to include (ean/mpn/pcd/articleNumbers)
+     * @param int|null $cursor last topdataProductId of the previous page (null = first page)
      */
     public function getProductMappings(array $types, ?int $cursor, int $limit, string $language): mixed
     {
@@ -41,6 +43,18 @@ class TopdataMapperWebserviceV2Client extends AbstractTopdataWebserviceV2Client
     public function getBrandMappings(int $start, int $limit, string $language): mixed
     {
         return $this->httpGet('/mapping/brand', [
+            'start' => $start,
+            'limit' => $limit,
+        ], $language);
+    }
+
+    /**
+     * Fetch the user's reserved providers (bulk, unified v2 pagination).
+     * Response payload: {rows: [{id, name, synonym?}], pagination}.
+     */
+    public function getProviders(int $start, int $limit, string $language): mixed
+    {
+        return $this->httpGet('/mapping/provider', [
             'start' => $start,
             'limit' => $limit,
         ], $language);

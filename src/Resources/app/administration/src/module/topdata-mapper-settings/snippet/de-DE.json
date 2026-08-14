@@ -1,0 +1,77 @@
+{
+    "TopdataMapperSW6": {
+        "settings": {
+            "title": "Topdata Mapper",
+            "description": "Editor der Matching-Strategie",
+            "credentials": {
+                "title": "Webservice-Zugangsdaten",
+                "subtitle": "Native Plugin-Konfiguration — wird in der Plugin-Konfiguration verwaltet, hier nur als Status angezeigt.",
+                "status": "Status:",
+                "configured": "Konfiguriert",
+                "notConfigured": "Nicht konfiguriert",
+                "openConfig": "Plugin-Konfiguration öffnen"
+            },
+            "strategy": {
+                "title": "Matching-Strategie",
+                "subtitle": "Mengenalgebra über Identifikator-Dimensionen — welches Shopware-Feld welchen Topdata-Identifikator matcht. Der DSL-String ist die einzige Quelle der Wahrheit."
+            },
+            "builder": {
+                "shopField": "Shopware-Feld",
+                "dimension": "Topdata-Identifikator",
+                "provider": "Anbieter",
+                "allProviders": "Alle Anbieter",
+                "propertyGroup": "Eigenschaftsgruppe",
+                "customField": "Custom-Feld",
+                "addLeaf": "Bedingung hinzufügen (UND)",
+                "addGroup": "Bedingungsgruppe hinzufügen (ODER)",
+                "orSeparator": "— oder —"
+            },
+            "dsl": {
+                "label": "DSL",
+                "helpText": "Mengenalgebra: '&' innerhalb einer Gruppe (UND), '|' zwischen Gruppen (ODER). Beispiel: product.ean:ean | product.manufacturer_number:mpn",
+                "copy": "Kopieren"
+            },
+            "validation": {
+                "title": "Ungültige Strategie",
+                "shopField": "Shopware-Feld",
+                "dimension": "Dimension",
+                "position": "Position",
+                "unreachable": "Der Validierungs-Endpunkt konnte nicht erreicht werden."
+            },
+            "dirtyConfirm": {
+                "title": "Ungespeicherte Änderungen",
+                "message": "Ihre aktuelle Strategie weicht vom zuletzt geladenen Wert ab. Das Anwenden des Presets verwirft Ihre Bearbeitungen — fortfahren?",
+                "confirm": "Preset anwenden",
+                "cancel": "Abbrechen"
+            },
+            "save": {
+                "button": "Strategie speichern",
+                "successTitle": "Strategie gespeichert",
+                "successMessage": "Die Matching-Strategie wurde validiert und gespeichert.",
+                "failedTitle": "Speichern fehlgeschlagen",
+                "failedGeneric": "Die Strategie konnte nicht gespeichert werden — bitte Verbindung prüfen."
+            },
+            "copy": {
+                "title": "DSL kopiert",
+                "message": "Der DSL-String wurde in die Zwischenablage kopiert."
+            },
+            "shopField": {
+                "product": {
+                    "ean": "Produkt: EAN-Feld (product.ean)",
+                    "manufacturer_number": "Produkt: Herstellernummer (product.manufacturer_number)",
+                    "manufacturer": "Produkt: Hersteller (product.manufacturer)",
+                    "product_number": "Produkt: Produktnummer (product.product_number)"
+                },
+                "property": "Eigenschaftsgruppe (property.<gruppe>)",
+                "customField": "Custom-Feld (customField.<name>)"
+            },
+            "dimension": {
+                "ean": "ean",
+                "mpn": "mpn",
+                "pcd": "pcd",
+                "articleNumbers": "articleNumbers",
+                "topdataBrandIds": "topdataBrandIds"
+            }
+        }
+    }
+}

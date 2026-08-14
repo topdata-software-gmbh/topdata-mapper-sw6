@@ -18,6 +18,7 @@ class MappingBuildStats
         public readonly int    $matched,
         public readonly int    $unmatched,
         public readonly float  $duration,
+        public readonly int    $conflicts = 0,
     ) {
     }
 }

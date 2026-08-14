@@ -5,27 +5,50 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and this 
 
 ## [Unreleased]
 
+### Added
+- **Matching DSL engine** (`src/Service/Dsl/*`, `ProductMappingMatcher_Dsl`):
+  set algebra over identifier dimensions — shop field (`product.ean`,
+  `product.manufacturer_number`, `product.manufacturer`,
+  `product.product_number`, `property.<group>`, `customField.<name>`) paired
+  with an API dimension (`ean`, `mpn`, `pcd`, `articleNumbers[.<provider>]`,
+  `topdataBrandIds`). Single PHP parser/serializer; invalid strategies make the
+  import fail loudly. Replaces `ProductMappingMatcher_EanMpn` (removed).
+- **Conflict handling** in the product build: a product matching >1 Topdata
+  article is a conflict — candidate ids + identifier previews are persisted in
+  `tdmp_product_conflict_resolutions` (new migration
+  `Migration2026081302CreateConflictResolutionsTable`), `tdmp_product` keeps
+  only the chosen row, auto-chosen resolutions are refreshed per import.
+- **Admin modules**: settings page (strategy editor with preset chips, visual
+  builder, live validation, authoritative save via
+  `TopdataMapperActionController`) and conflicts page (Products navigation,
+  paginated grid, immediate radio resolve without re-import). New privileges
+  `topdata_mapper:read` / `topdata_mapper:update` (new `acl.xml`).
+- `topdata:mapper:import` summary now also reports the conflict count; the
+  brand build runs before the product build when the strategy references
+  `topdataBrandIds`.
+- New `matchingStrategy` config field (raw DSL textarea; the settings page is
+  the preferred editor).
+
 ### Changed
-- The mapper import now uses keyset pagination (`cursor` / `next_cursor`) instead
-  of `start` offsets when streaming `/v2/mapping/product` (brand import stays
-  offset-based). The client throws when the webservice reports `has_more`
-  without a `next_cursor`.
-- `tdmp_product` schema: `topdata_id` renamed to `top_id`; `product_version_id` is
-  now always the live version (constant, see `TdmpProductService::LIVE_VERSION_HEX`)
-  so the new FK `fk_tdmp_product_product (product_id, product_version_id) →
-  product(id, version_id) ON DELETE CASCADE` is safe against Shopware's versioning
-  (draft rows deleted on version merge never cascade). `tdmp_brand.topdata_id`
-  renamed to `top_id` as well.
-- `ProductMappingMatcherInterface::matchRow()` now returns
+- **Mapping API v2 contract renames** (lockstep with t2-webservice):
+  `products_id` → `topdata_product_id`, `oem` → `mpn`, `distributor` →
+  `articleNumbers` (per-provider object), new `topdataBrandIds` dimension.
+- `tdmp_product.top_id` renamed to `topdata_product_id`,
+  `tdmp_brand.top_id` renamed to `topdata_brand_id` (migrations 1300/1301
+  updated in place); `product_version_id` is now always the live version
+  (constant, see `TdmpProductService::LIVE_VERSION_HEX`) so the FK
+  `fk_tdmp_product_product (product_id, product_version_id) → product(id,
+  version_id) ON DELETE CASCADE` is safe against Shopware's versioning.
+- The product build requests `['ean', 'mpn', 'pcd', 'articleNumbers']` and
+  matches via the configured DSL strategy instead of the hardcoded EAN/OEM
+  logic.
+- The mapper import now uses keyset pagination (`cursor` / `next_cursor`)
+  instead of `start` offsets when streaming `/v2/mapping/product` (brand
+  import stays offset-based). The client throws when the webservice reports
+  `has_more` without a `next_cursor`.
+- `ProductMappingMatcherInterface::matchRow()` returns
   `list<array{product_id: string}>` — matchers must only return live-version
-  products; consumers (TopFeed, TopFinder) updated to read `top_id`.
-- Added idempotent migration `Migration2026081301TdmpTopIdAndProductFk` that
-  migrates existing installs (normalizes versions, renames columns, adds FK).
-- Replaced the skeleton example controllers/command with the mapping engine:
-  mapping tables (`tdmp_product`, `tdmp_brand`), the mapping-API webservice
-  client, the local identifier matcher, and the `topdata:mapper:import` command.
-- The import command now prints a summary table (pages, API rows, matched,
-  unmatched, duration) at the end of the run.
+  products; consumers (TopFeed, TopFinder) read `topdata_product_id`.
 
 ## [1.0.0] - 2026-08-13
 

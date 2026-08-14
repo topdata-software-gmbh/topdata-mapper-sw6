@@ -7,11 +7,17 @@
         <service id="Topdata\TopdataMapperSW6\Service\TopdataMapperWebserviceV2Client" autowire="true"/>
         <service id="Topdata\TopdataMapperSW6\Service\Db\TdmpProductService" autowire="true"/>
         <service id="Topdata\TopdataMapperSW6\Service\Db\TdmpBrandService" autowire="true"/>
-        <service id="Topdata\TopdataMapperSW6\Service\ProductMappingMatcher_EanMpn" autowire="true"/>
+        <service id="Topdata\TopdataMapperSW6\Service\Db\TdmpConflictResolutionService" autowire="true"/>
+        <service id="Topdata\TopdataMapperSW6\Service\Dsl\DslParser" autowire="true"/>
+        <service id="Topdata\TopdataMapperSW6\Service\Dsl\DslSerializer" autowire="true"/>
+        <service id="Topdata\TopdataMapperSW6\Service\Dsl\DslPairingMatrix" autowire="true"/>
+        <service id="Topdata\TopdataMapperSW6\Service\DslStrategyService" autowire="true"/>
+        <service id="Topdata\TopdataMapperSW6\Service\ProductMappingMatcher_Dsl" autowire="true"/>
         <service id="Topdata\TopdataMapperSW6\Service\TdmpMappingBuildService" autowire="true">
             <argument type="service" key="$productMatcher"
-                      id="Topdata\TopdataMapperSW6\Service\ProductMappingMatcher_EanMpn"/>
+                      id="Topdata\TopdataMapperSW6\Service\ProductMappingMatcher_Dsl"/>
         </service>
+        <service id="Topdata\TopdataMapperSW6\Controller\Api\TopdataMapperActionController" autowire="true"/>
 
         <service id="Topdata\TopdataMapperSW6\Command\Command_TdmpImport" autowire="true">
             <tag name="console.command"/>

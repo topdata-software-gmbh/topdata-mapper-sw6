@@ -1,0 +1,43 @@
+{
+    "TopdataMapperSW6": {
+        "conflicts": {
+            "title": "Topdata mapping conflicts",
+            "description": "Resolve products matching multiple Topdata articles",
+            "summary": {
+                "lastImport": "Last import",
+                "never": "Never",
+                "pending": "Pending",
+                "resolved": "Resolved"
+            },
+            "list": {
+                "title": "Conflicts"
+            },
+            "tabs": {
+                "all": "All",
+                "pending": "Pending",
+                "resolved": "Resolved"
+            },
+            "searchPlaceholder": "Search by product number or name ...",
+            "columns": {
+                "product": "Product",
+                "candidates": "Candidates",
+                "status": "Status",
+                "updatedAt": "Updated"
+            },
+            "status": {
+                "pending": "Pending",
+                "resolved": "Resolved"
+            },
+            "resolve": {
+                "successTitle": "Conflict resolved",
+                "successMessage": "The product is now mapped to Topdata article #{number} — effective immediately.",
+                "failedTitle": "Resolution failed",
+                "failedMessage": "Could not save the mapping."
+            },
+            "empty": {
+                "title": "No conflicts",
+                "message": "Conflicts appear after an import (topdata:mapper:import) when a product matches multiple Topdata articles."
+            }
+        }
+    }
+}

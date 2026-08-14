@@ -1,0 +1,271 @@
+{% block topdata_mapper_settings %}
+    <sw-page class="topdata-mapper-settings">
+        <template #smart-bar-header>
+            <h2>{{ $tc('TopdataMapperSW6.settings.title') }}</h2>
+        </template>
+
+        <template #smart-bar-actions>
+            <sw-button
+                variant="primary"
+                :isLoading="isSaving"
+                :disabled="isSaving || !validationValid || !isDirty"
+                @click="save"
+            >
+                {{ $tc('TopdataMapperSW6.settings.save.button') }}
+            </sw-button>
+        </template>
+
+        <template #content>
+            <sw-card-view>
+                <sw-loader v-if="isLoading" class="topdata-mapper-settings__loader"/>
+
+                {% block topdata_mapper_settings_credentials_card %}
+                    <sw-card
+                        :title="$tc('TopdataMapperSW6.settings.credentials.title')"
+                        :subtitle="$tc('TopdataMapperSW6.settings.credentials.subtitle')"
+                    >
+                        <sw-container columns="1fr auto" align="center" gap="0 24px">
+                            <p class="topdata-mapper-settings__credentials-text">
+                                {{ $tc('TopdataMapperSW6.settings.credentials.status') }}
+                                <sw-label
+                                    v-if="credentialsConfigured"
+                                    variant="success"
+                                    appearance="pill"
+                                >
+                                    {{ $tc('TopdataMapperSW6.settings.credentials.configured') }}
+                                </sw-label>
+                                <sw-label
+                                    v-else
+                                    variant="danger"
+                                    appearance="pill"
+                                >
+                                    {{ $tc('TopdataMapperSW6.settings.credentials.notConfigured') }}
+                                </sw-label>
+                            </p>
+
+                            <sw-button
+                                variant="ghost"
+                                :router-link="{ name: 'sw.extension.config', params: { namespace: 'TopdataMapperSW6' } }"
+                            >
+                                {{ $tc('TopdataMapperSW6.settings.credentials.openConfig') }}
+                            </sw-button>
+                        </sw-container>
+                    </sw-card>
+                {% endblock %}
+
+                {% block topdata_mapper_settings_strategy_card %}
+                    <sw-card
+                        :title="$tc('TopdataMapperSW6.settings.strategy.title')"
+                        :subtitle="$tc('TopdataMapperSW6.settings.strategy.subtitle')"
+                    >
+                        {% block topdata_mapper_settings_presets %}
+                            <div class="topdata-mapper-settings__presets">
+                                <sw-button
+                                    v-for="preset in presets"
+                                    :key="preset.key"
+                                    size="small"
+                                    :variant="preset.key === activePresetKey ? 'primary' : 'ghost'"
+                                    @click="onPresetClick(preset)"
+                                >
+                                    {{ preset.label }}
+                                </sw-button>
+                            </div>
+                        {% endblock %}
+
+                        {% block topdata_mapper_settings_builder %}
+                            <div
+                                v-for="(group, groupIndex) in groups"
+                                :key="groupIndex"
+                                class="topdata-mapper-settings__group"
+                            >
+                                <sw-container
+                                    v-for="(leaf, leafIndex) in group.leaves"
+                                    :key="leafIndex"
+                                    columns="minmax(220px, 1fr) 200px 220px 40px"
+                                    align="center"
+                                    gap="0 12px"
+                                    class="topdata-mapper-settings__leaf"
+                                >
+                                    <sw-select-field
+                                        v-model="leaf.kind"
+                                        :options="shopFieldKinds.map(kind => ({ value: kind, label: shopFieldLabel(kind) }))"
+                                        @change="onLeafShopFieldChange(leaf)"
+                                    >
+                                        <template #label>
+                                            {{ $tc('TopdataMapperSW6.settings.builder.shopField') }}
+                                        </template>
+                                    </sw-select-field>
+
+                                    <sw-select-field
+                                        v-model="leaf.dimension"
+                                        :options="_dimensionOptions(leaf.kind).map(dimension => ({ value: dimension, label: dimensionLabel(dimension) }))"
+                                        :disabled="(leaf.kind === 'property' || leaf.kind === 'customField') && !leaf.group"
+                                        @change="onLeafDimensionChange(leaf)"
+                                    >
+                                        <template #label>
+                                            {{ $tc('TopdataMapperSW6.settings.builder.dimension') }}
+                                        </template>
+                                    </sw-select-field>
+
+                                    <!-- contextual variant select -->
+                                    <sw-select-field
+                                        v-if="leaf.dimension === 'articleNumbers'"
+                                        v-model="leaf.provider"
+                                        :options="[{ value: null, label: $tc('TopdataMapperSW6.settings.builder.allProviders') }].concat(providers.map(provider => ({ value: String(provider.id), label: provider.name })))"
+                                        @change="onLeafVariantChange"
+                                    >
+                                        <template #label>
+                                            {{ $tc('TopdataMapperSW6.settings.builder.provider') }}
+                                        </template>
+                                    </sw-select-field>
+
+                                    <sw-select-field
+                                        v-else-if="leaf.kind === 'property'"
+                                        v-model="leaf.group"
+                                        :options="propertyGroups"
+                                        @change="onLeafVariantChange"
+                                    >
+                                        <template #label>
+                                            {{ $tc('TopdataMapperSW6.settings.builder.propertyGroup') }}
+                                        </template>
+                                    </sw-select-field>
+
+                                    <sw-select-field
+                                        v-else-if="leaf.kind === 'customField'"
+                                        v-model="leaf.group"
+                                        :options="customFieldNames"
+                                        @change="onLeafVariantChange"
+                                    >
+                                        <template #label>
+                                            {{ $tc('TopdataMapperSW6.settings.builder.customField') }}
+                                        </template>
+                                    </sw-select-field>
+
+                                    <span v-else></span>
+
+                                    <sw-icon
+                                        name="regular-times-s"
+                                        size="16"
+                                        class="topdata-mapper-settings__remove"
+                                        @click="removeLeaf(group, leafIndex)"
+                                    />
+                                </sw-container>
+
+                                <sw-button
+                                    size="small"
+                                    variant="ghost"
+                                    class="topdata-mapper-settings__add-leaf"
+                                    @click="addLeaf(group)"
+                                >
+                                    {{ $tc('TopdataMapperSW6.settings.builder.addLeaf') }}
+                                </sw-button>
+
+                                <sw-icon
+                                    v-if="groups.length > 1"
+                                    name="regular-times-s"
+                                    size="16"
+                                    class="topdata-mapper-settings__remove"
+                                    @click="removeGroup(groupIndex)"
+                                />
+                            </div>
+
+                            <div class="topdata-mapper-settings__or-separator">
+                                {{ $tc('TopdataMapperSW6.settings.builder.orSeparator') }}
+                            </div>
+
+                            <sw-button
+                                size="small"
+                                variant="ghost"
+                                class="topdata-mapper-settings__add-group"
+                                @click="addGroup"
+                            >
+                                {{ $tc('TopdataMapperSW6.settings.builder.addGroup') }}
+                            </sw-button>
+                        {% endblock %}
+
+                        {% block topdata_mapper_settings_dsl %}
+                            <div class="topdata-mapper-settings__dsl">
+                                <sw-textarea-field
+                                    ref="dslTextarea"
+                                    v-model="dsl"
+                                    :label="$tc('TopdataMapperSW6.settings.dsl.label')"
+                                    :helpText="$tc('TopdataMapperSW6.settings.dsl.helpText')"
+                                    rows="5"
+                                    placeholder="product.ean:ean | product.manufacturer_number:mpn"
+                                />
+                                <sw-button
+                                    size="small"
+                                    variant="ghost"
+                                    :disabled="isCopying"
+                                    @click="copyDsl"
+                                >
+                                    <sw-icon name="regular-copy" size="14"/>
+                                    {{ $tc('TopdataMapperSW6.settings.dsl.copy') }}
+                                </sw-button>
+                            </div>
+                        {% endblock %}
+
+                        {% block topdata_mapper_settings_validation %}
+                            <sw-alert
+                                v-if="!validationValid && validationError"
+                                variant="error"
+                                :title="$tc('TopdataMapperSW6.settings.validation.title')"
+                            >
+                                {{ validationError.message }}
+                                <template v-if="validationError.shopField">
+                                    <br>{{ $tc('TopdataMapperSW6.settings.validation.shopField') }}: {{ validationError.shopField }}
+                                </template>
+                                <template v-if="validationError.dimension">
+                                    <br>{{ $tc('TopdataMapperSW6.settings.validation.dimension') }}: {{ validationError.dimension }}
+                                </template>
+                                <template v-if="validationError.position !== undefined && validationError.position !== null">
+                                    <br>{{ $tc('TopdataMapperSW6.settings.validation.position') }}: {{ validationError.position }}
+                                </template>
+                            </sw-alert>
+
+                            <sw-alert
+                                v-if="saveError"
+                                variant="error"
+                                :title="$tc('TopdataMapperSW6.settings.save.failedTitle')"
+                            >
+                                {{ saveError.message }}
+                                <template v-if="saveError.shopField">
+                                    <br>{{ $tc('TopdataMapperSW6.settings.validation.shopField') }}: {{ saveError.shopField }}
+                                </template>
+                                <template v-if="saveError.dimension">
+                                    <br>{{ $tc('TopdataMapperSW6.settings.validation.dimension') }}: {{ saveError.dimension }}
+                                </template>
+                            </sw-alert>
+                        {% endblock %}
+                    </sw-card>
+                {% endblock %}
+            </sw-card-view>
+
+            {% block topdata_mapper_settings_dirty_confirm %}
+                <sw-modal
+                    v-if="showDirtyConfirm"
+                    variant="small"
+                    :title="$tc('TopdataMapperSW6.settings.dirtyConfirm.title')"
+                    @modal-close="cancelPreset"
+                >
+                    <p>{{ $tc('TopdataMapperSW6.settings.dirtyConfirm.message') }}</p>
+
+                    <template #modal-footer>
+                        <sw-button
+                            variant="primary"
+                            @click="confirmPreset"
+                        >
+                            {{ $tc('TopdataMapperSW6.settings.dirtyConfirm.confirm') }}
+                        </sw-button>
+                        <sw-button
+                            variant="ghost"
+                            @click="cancelPreset"
+                        >
+                            {{ $tc('TopdataMapperSW6.settings.dirtyConfirm.cancel') }}
+                        </sw-button>
+                    </template>
+                </sw-modal>
+            {% endblock %}
+        </template>
+    </sw-page>
+{% endblock %}

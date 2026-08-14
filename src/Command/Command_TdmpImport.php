@@ -15,7 +15,9 @@ use Topdata\TopdataFoundationSW6\Command\AbstractTopdataCommand;
 use Topdata\TopdataFoundationSW6\Helper\CliStyle;
 use Topdata\TopdataFoundationSW6\Service\CliApiCredentialPrompter;
 use Topdata\TopdataFoundationSW6\Util\CliLogger;
+use Topdata\TopdataMapperSW6\Service\DslStrategyService;
 use Topdata\TopdataMapperSW6\Service\MappingBuildStats;
+use Topdata\TopdataMapperSW6\Service\ProductMappingMatcher_Dsl;
 use Topdata\TopdataMapperSW6\Service\TdmpMappingBuildService;
 use Topdata\TopdataMapperSW6\Service\TopdataMapperWebserviceV2Client;
 
@@ -32,6 +34,7 @@ class Command_TdmpImport extends AbstractTopdataCommand
         private readonly TdmpMappingBuildService        $mappingBuildService,
         private readonly TopdataMapperWebserviceV2Client $mapperClient,
         private readonly CliApiCredentialPrompter       $credentialPrompter,
+        private readonly DslStrategyService              $strategyService,
     ) {
         parent::__construct();
     }
@@ -74,10 +77,24 @@ class Command_TdmpImport extends AbstractTopdataCommand
     }
 
     /**
+     * Builds product + brand mappings. The brand build runs FIRST when the
+     * strategy references topdataBrandIds — the product build's reverse map
+     * (shop manufacturer → Topdata brand id via tdmp_brand) needs fresh brand
+     * rows to match anything.
+     *
      * @return MappingBuildStats[]
      */
     private function _buildAll(): array
     {
+        $strategy = $this->strategyService->getConfiguredStrategy();
+
+        if (ProductMappingMatcher_Dsl::referencesTopdataBrandIds($strategy)) {
+            return [
+                $this->mappingBuildService->buildBrandMappings(),
+                $this->mappingBuildService->buildProductMappings(),
+            ];
+        }
+
         return [
             $this->mappingBuildService->buildProductMappings(),
             $this->mappingBuildService->buildBrandMappings(),
@@ -99,6 +116,7 @@ class Command_TdmpImport extends AbstractTopdataCommand
                 $this->_cell(number_format($stat->apiRows)),
                 $this->_cell(number_format($stat->matched), $stat->matched > 0 ? ['fg' => 'green', 'options' => 'bold'] : null),
                 $this->_cell(number_format($stat->unmatched), $stat->unmatched > 0 ? ['fg' => 'yellow', 'options' => 'bold'] : null),
+                $this->_cell(number_format($stat->conflicts), $stat->conflicts > 0 ? ['fg' => 'yellow', 'options' => 'bold'] : null),
                 $this->_cell(sprintf('%.1f s', $stat->duration)),
             ];
         }
@@ -112,11 +130,12 @@ class Command_TdmpImport extends AbstractTopdataCommand
             $this->_cell(number_format($totals['apiRows']), ['options' => 'bold']),
             $this->_cell(number_format($totals['matched']), ['options' => 'bold']),
             $this->_cell(number_format($totals['unmatched']), ['options' => 'bold']),
+            $this->_cell(number_format($totals['conflicts']), ['options' => 'bold']),
             $this->_cell(sprintf('%.1f s', $totals['duration']), ['options' => 'bold']),
         ];
 
         $headers = [];
-        foreach (['Mapping', 'Pages', 'API rows', 'Matched', 'Unmatched', 'Duration'] as $header) {
+        foreach (['Mapping', 'Pages', 'API rows', 'Matched', 'Unmatched', 'Conflicts', 'Duration'] as $header) {
             $headers[] = $this->_cell($header, ['fg' => 'cyan', 'options' => 'bold']);
         }
 
@@ -147,7 +166,7 @@ class Command_TdmpImport extends AbstractTopdataCommand
 
     /**
      * @param MappingBuildStats[] $stats
-     * @return array{pages: int, apiRows: int, matched: int, unmatched: int, duration: float}
+     * @return array{pages: int, apiRows: int, matched: int, unmatched: int, conflicts: int, duration: float}
      */
     private function _sumStats(array $stats): array
     {
@@ -156,6 +175,7 @@ class Command_TdmpImport extends AbstractTopdataCommand
             'apiRows'   => array_sum(array_map(fn(MappingBuildStats $s) => $s->apiRows, $stats)),
             'matched'   => array_sum(array_map(fn(MappingBuildStats $s) => $s->matched, $stats)),
             'unmatched' => array_sum(array_map(fn(MappingBuildStats $s) => $s->unmatched, $stats)),
+            'conflicts' => array_sum(array_map(fn(MappingBuildStats $s) => $s->conflicts, $stats)),
             'duration'  => array_sum(array_map(fn(MappingBuildStats $s) => $s->duration, $stats)),
         ];
     }

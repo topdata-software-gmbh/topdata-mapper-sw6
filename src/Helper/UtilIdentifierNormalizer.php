@@ -5,8 +5,13 @@ declare(strict_types=1);
 namespace Topdata\TopdataMapperSW6\Helper;
 
 /**
- * Identifier normalization for matching (mirrors TopFeed's UtilMappingHelper):
- * EAN → digits-only; MPN/OEM → lowercase, no surrounding space; labels → lowercase, whitespace-collapsed.
+ * Identifier normalization for matching — the single normalization source for
+ * the mapping DSL (TopFeed's own helpers were removed with its matcher, so
+ * there is no sync constraint left):
+ * - EAN → digits-only
+ * - MPN/PCD → lowercase trim
+ * - article numbers → exact (whitespace-trimmed)
+ * - labels → lowercase, whitespace-collapsed
  *
  * 08/2026 created
  */
@@ -20,6 +25,16 @@ final class UtilIdentifierNormalizer
     public static function normalizeMpn(string $value): string
     {
         return strtolower(trim($value));
+    }
+
+    public static function normalizePcd(string $value): string
+    {
+        return strtolower(trim($value));
+    }
+
+    public static function normalizeArticleNumber(string $value): string
+    {
+        return trim($value);
     }
 
     public static function normalizeLabel(string $value): string
