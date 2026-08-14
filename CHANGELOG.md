@@ -28,6 +28,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and this 
   `topdataBrandIds`.
 - New `matchingStrategy` config field (raw DSL textarea; the settings page is
   the preferred editor).
+- **DSL syntax help modal** in the settings page: a help button next to the
+  DSL textarea opens a modal explaining the grammar, shop fields, identifiers,
+  allowed pairings (rendered from the pairing matrix) and examples.
 
 ### Changed
 - **Mapping API v2 contract renames** (lockstep with t2-webservice):

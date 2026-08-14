@@ -193,15 +193,25 @@
                                     rows="5"
                                     placeholder="product.ean:ean | product.manufacturer_number:mpn"
                                 />
-                                <sw-button
-                                    size="small"
-                                    variant="ghost"
-                                    :disabled="isCopying"
-                                    @click="copyDsl"
-                                >
-                                    <sw-icon name="regular-copy" size="14"/>
-                                    {{ $tc('TopdataMapperSW6.settings.dsl.copy') }}
-                                </sw-button>
+                                <div class="topdata-mapper-settings__dsl-actions">
+                                    <sw-button
+                                        size="small"
+                                        variant="ghost"
+                                        :disabled="isCopying"
+                                        @click="copyDsl"
+                                    >
+                                        <sw-icon name="regular-copy" size="14"/>
+                                        {{ $tc('TopdataMapperSW6.settings.dsl.copy') }}
+                                    </sw-button>
+                                    <sw-button
+                                        size="small"
+                                        variant="ghost"
+                                        @click="openDslHelp"
+                                    >
+                                        <sw-icon name="regular-question-circle" size="14"/>
+                                        {{ $tc('TopdataMapperSW6.settings.dsl.help') }}
+                                    </sw-button>
+                                </div>
                             </div>
                         {% endblock %}
 
@@ -262,6 +272,91 @@
                             @click="cancelPreset"
                         >
                             {{ $tc('TopdataMapperSW6.settings.dirtyConfirm.cancel') }}
+                        </sw-button>
+                    </template>
+                </sw-modal>
+            {% endblock %}
+
+            {% block topdata_mapper_settings_dsl_help %}
+                <sw-modal
+                    v-if="showDslHelp"
+                    variant="large"
+                    class="topdata-mapper-settings__dsl-help"
+                    :title="$tc('TopdataMapperSW6.settings.dslHelp.title')"
+                    @modal-close="closeDslHelp"
+                >
+                    <p>{{ $tc('TopdataMapperSW6.settings.dslHelp.intro') }}</p>
+
+                    <h3>{{ $tc('TopdataMapperSW6.settings.dslHelp.grammar.title') }}</h3>
+                    <p>{{ $tc('TopdataMapperSW6.settings.dslHelp.grammar.leaf') }}</p>
+                    <p class="topdata-mapper-settings__dsl-help-code">
+                        <code>shopField:dimension</code>
+                    </p>
+                    <ul>
+                        <li>
+                            <code>&amp;</code> — {{ $tc('TopdataMapperSW6.settings.dslHelp.grammar.and') }}
+                        </li>
+                        <li>
+                            <code>|</code> — {{ $tc('TopdataMapperSW6.settings.dslHelp.grammar.or') }}
+                        </li>
+                    </ul>
+
+                    <h3>{{ $tc('TopdataMapperSW6.settings.dslHelp.shopFields.title') }}</h3>
+                    <ul>
+                        <li><code>product.ean</code> — {{ $tc('TopdataMapperSW6.settings.dslHelp.shopFields.ean') }}</li>
+                        <li><code>product.manufacturer_number</code> — {{ $tc('TopdataMapperSW6.settings.dslHelp.shopFields.manufacturerNumber') }}</li>
+                        <li><code>product.manufacturer</code> — {{ $tc('TopdataMapperSW6.settings.dslHelp.shopFields.manufacturer') }}</li>
+                        <li><code>product.product_number</code> — {{ $tc('TopdataMapperSW6.settings.dslHelp.shopFields.productNumber') }}</li>
+                        <li><code>property.&lt;group&gt;</code> — {{ $tc('TopdataMapperSW6.settings.dslHelp.shopFields.property') }}</li>
+                        <li><code>customField.&lt;name&gt;</code> — {{ $tc('TopdataMapperSW6.settings.dslHelp.shopFields.customField') }}</li>
+                    </ul>
+
+                    <h3>{{ $tc('TopdataMapperSW6.settings.dslHelp.dimensions.title') }}</h3>
+                    <ul>
+                        <li><code>ean</code> — {{ $tc('TopdataMapperSW6.settings.dslHelp.dimensions.ean') }}</li>
+                        <li><code>mpn</code> — {{ $tc('TopdataMapperSW6.settings.dslHelp.dimensions.mpn') }}</li>
+                        <li><code>pcd</code> — {{ $tc('TopdataMapperSW6.settings.dslHelp.dimensions.pcd') }}</li>
+                        <li><code>articleNumbers</code> — {{ $tc('TopdataMapperSW6.settings.dslHelp.dimensions.articleNumbers') }}</li>
+                        <li><code>topdataBrandIds</code> — {{ $tc('TopdataMapperSW6.settings.dslHelp.dimensions.brandIds') }}</li>
+                    </ul>
+
+                    <h3>{{ $tc('TopdataMapperSW6.settings.dslHelp.pairings.title') }}</h3>
+                    <p>{{ $tc('TopdataMapperSW6.settings.dslHelp.pairings.intro') }}</p>
+                    <ul>
+                        <li v-for="(dimensions, kind) in allowedPairs" :key="kind">
+                            <code>{{ kind }}</code> ↔ {{ dimensions.map(dimensionLabel).join(', ') }}
+                        </li>
+                    </ul>
+                    <p>{{ $tc('TopdataMapperSW6.settings.dslHelp.pairings.providerScope') }}</p>
+
+                    <h3>{{ $tc('TopdataMapperSW6.settings.dslHelp.examples.title') }}</h3>
+                    <ul class="topdata-mapper-settings__dsl-help-examples">
+                        <li>
+                            <p class="topdata-mapper-settings__dsl-help-code">
+                                <code>product.ean:ean | product.manufacturer_number:mpn</code>
+                            </p>
+                            <p>{{ $tc('TopdataMapperSW6.settings.dslHelp.examples.one') }}</p>
+                        </li>
+                        <li>
+                            <p class="topdata-mapper-settings__dsl-help-code">
+                                <code>product.ean:ean &amp; product.manufacturer:topdataBrandIds</code>
+                            </p>
+                            <p>{{ $tc('TopdataMapperSW6.settings.dslHelp.examples.two') }}</p>
+                        </li>
+                        <li>
+                            <p class="topdata-mapper-settings__dsl-help-code">
+                                <code>product.product_number:articleNumbers.4123</code>
+                            </p>
+                            <p>{{ $tc('TopdataMapperSW6.settings.dslHelp.examples.three') }}</p>
+                        </li>
+                    </ul>
+
+                    <template #modal-footer>
+                        <sw-button
+                            variant="primary"
+                            @click="closeDslHelp"
+                        >
+                            {{ $tc('TopdataMapperSW6.settings.dslHelp.close') }}
                         </sw-button>
                     </template>
                 </sw-modal>

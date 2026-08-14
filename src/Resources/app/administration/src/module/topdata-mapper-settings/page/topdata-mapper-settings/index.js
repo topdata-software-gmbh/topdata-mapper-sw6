@@ -47,6 +47,9 @@ Component.register('topdata-mapper-settings', {
         showDirtyConfirm: false,
         pendingPreset: null,
 
+        // ---- DSL syntax help modal ----
+        showDslHelp: false,
+
         saveError: null,
     }),
 
@@ -130,6 +133,14 @@ Component.register('topdata-mapper-settings', {
         },
 
         // ------------------------------------------------------------- labels
+        openDslHelp() {
+            this.showDslHelp = true;
+        },
+
+        closeDslHelp() {
+            this.showDslHelp = false;
+        },
+
         shopFieldLabel(kind) {
             const labels = {
                 'product.ean': this.$tc('TopdataMapperSW6.settings.shopField.product.ean'),
@@ -179,7 +190,7 @@ Component.register('topdata-mapper-settings', {
                         kind,
                         dimension: leaf.dimension,
                         group: groupValue,
-                        provider: leaf.variant,
+                        provider: leaf.dimensionVariant,
                     };
                 }),
             }));

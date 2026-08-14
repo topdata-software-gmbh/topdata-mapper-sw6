@@ -29,7 +29,47 @@
             "dsl": {
                 "label": "DSL",
                 "helpText": "Set algebra: '&' within a group (AND), '|' between groups (OR). Example: product.ean:ean | product.manufacturer_number:mpn",
-                "copy": "Copy"
+                "copy": "Copy",
+                "help": "DSL help"
+            },
+            "dslHelp": {
+                "title": "DSL syntax reference",
+                "intro": "The matching strategy is a set algebra over identifier dimensions: it defines which Shopware field is matched against which Topdata identifier. The DSL string is the single source of truth — the visual builder above is a live-synced view over it.",
+                "grammar": {
+                    "title": "Grammar",
+                    "leaf": "Each condition (leaf) pairs a Shopware field with a Topdata identifier:",
+                    "and": "AND — all leaves in a group must match",
+                    "or": "OR — at least one group must match"
+                },
+                "shopFields": {
+                    "title": "Shopware fields",
+                    "ean": "the product's EAN",
+                    "manufacturerNumber": "the product's manufacturer number (MPN)",
+                    "manufacturer": "the product's manufacturer",
+                    "productNumber": "the product's own product number",
+                    "property": "a property value of the given property group",
+                    "customField": "a custom field value of the given name"
+                },
+                "dimensions": {
+                    "title": "Topdata identifiers",
+                    "ean": "the Topdata article's EAN",
+                    "mpn": "the Topdata article's manufacturer number (MPN)",
+                    "pcd": "the Topdata article's PCD number",
+                    "articleNumbers": "the Topdata article numbers",
+                    "brandIds": "the Topdata brand id(s)"
+                },
+                "pairings": {
+                    "title": "Allowed pairings",
+                    "intro": "Not every field can be paired with every identifier — the allowed combinations are:",
+                    "providerScope": "articleNumbers.<providerId> restricts a leaf to a single provider (e.g. articleNumbers.4123)."
+                },
+                "examples": {
+                    "title": "Examples",
+                    "one": "Match products by EAN first, fall back to the manufacturer number.",
+                    "two": "Both conditions must match: EAN and manufacturer.",
+                    "three": "Match the product number only against article numbers of provider 4123."
+                },
+                "close": "Close"
             },
             "validation": {
                 "title": "Invalid strategy",

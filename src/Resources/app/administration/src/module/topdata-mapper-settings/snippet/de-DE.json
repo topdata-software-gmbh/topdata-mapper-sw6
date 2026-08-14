@@ -29,7 +29,47 @@
             "dsl": {
                 "label": "DSL",
                 "helpText": "Mengenalgebra: '&' innerhalb einer Gruppe (UND), '|' zwischen Gruppen (ODER). Beispiel: product.ean:ean | product.manufacturer_number:mpn",
-                "copy": "Kopieren"
+                "copy": "Kopieren",
+                "help": "DSL-Hilfe"
+            },
+            "dslHelp": {
+                "title": "DSL-Syntax-Referenz",
+                "intro": "Die Matching-Strategie ist eine Mengenalgebra über Identifikator-Dimensionen: Sie definiert, welches Shopware-Feld gegen welchen Topdata-Identifikator gematcht wird. Der DSL-String ist die einzige Quelle der Wahrheit — der visuelle Builder oben ist eine synchronisierte Ansicht darauf.",
+                "grammar": {
+                    "title": "Grammatik",
+                    "leaf": "Jede Bedingung (Leaf) paart ein Shopware-Feld mit einem Topdata-Identifikator:",
+                    "and": "UND — alle Leaves in einer Gruppe müssen matchen",
+                    "or": "ODER — mindestens eine Gruppe muss matchen"
+                },
+                "shopFields": {
+                    "title": "Shopware-Felder",
+                    "ean": "die EAN des Produkts",
+                    "manufacturerNumber": "die Herstellernummer (MPN) des Produkts",
+                    "manufacturer": "der Hersteller des Produkts",
+                    "productNumber": "die eigene Produktnummer des Produkts",
+                    "property": "ein Eigenschaftswert der angegebenen Eigenschaftsgruppe",
+                    "customField": "ein Custom-Feld-Wert des angegebenen Namens"
+                },
+                "dimensions": {
+                    "title": "Topdata-Identifikatoren",
+                    "ean": "die EAN des Topdata-Artikels",
+                    "mpn": "die Herstellernummer (MPN) des Topdata-Artikels",
+                    "pcd": "die PCD-Nummer des Topdata-Artikels",
+                    "articleNumbers": "die Artikelnummern des Topdata-Artikels",
+                    "brandIds": "die Topdata-Marken-ID(s)"
+                },
+                "pairings": {
+                    "title": "Erlaubte Kombinationen",
+                    "intro": "Nicht jedes Feld kann mit jedem Identifikator kombiniert werden — erlaubt sind:",
+                    "providerScope": "articleNumbers.<providerId> schränkt ein Leaf auf einen einzelnen Anbieter ein (z. B. articleNumbers.4123)."
+                },
+                "examples": {
+                    "title": "Beispiele",
+                    "one": "Produkte zuerst per EAN matchen, sonst über die Herstellernummer.",
+                    "two": "Beide Bedingungen müssen matchen: EAN und Hersteller.",
+                    "three": "Produktnummer nur gegen Artikelnummern von Anbieter 4123 matchen."
+                },
+                "close": "Schließen"
             },
             "validation": {
                 "title": "Ungültige Strategie",
