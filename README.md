@@ -49,8 +49,18 @@ settings or prompted on the CLI.
 
 Products matching >1 Topdata article are conflicts: `tdmp_product` keeps only
 the chosen row (auto = lowest id; user choices survive re-imports), the admin
-module **Products → Topdata mapping conflicts** shows candidates and resolves
+module **Katalog → Topdata Mapper → Konflikte** shows candidates and resolves
 immediately without a re-import.
+
+## Admin
+
+- **Katalog → Topdata Mapper** (new navigation group):
+  - **Mappings** — read-only browser over `tdmp_product` / `tdmp_brand`
+    (tabs for product and brand mappings, server-side pagination + search by
+    number/name/Topdata id, thumbnails for products).
+  - **Konflikte** — conflict resolution grid (see above; moved out of
+    *Katalog → Produkte*).
+- **Einstellungen → Plugins → Topdata Mapper** — strategy editor (unchanged).
 
 ## Consumers
 

@@ -8,6 +8,7 @@
         <service id="Topdata\TopdataMapperSW6\Service\Db\TdmpProductService" autowire="true"/>
         <service id="Topdata\TopdataMapperSW6\Service\Db\TdmpBrandService" autowire="true"/>
         <service id="Topdata\TopdataMapperSW6\Service\Db\TdmpConflictResolutionService" autowire="true"/>
+        <service id="Topdata\TopdataMapperSW6\Service\Db\TdmpMappingBrowseService" autowire="true"/>
         <service id="Topdata\TopdataMapperSW6\Service\Dsl\DslParser" autowire="true"/>
         <service id="Topdata\TopdataMapperSW6\Service\Dsl\DslSerializer" autowire="true"/>
         <service id="Topdata\TopdataMapperSW6\Service\Dsl\DslPairingMatrix" autowire="true"/>

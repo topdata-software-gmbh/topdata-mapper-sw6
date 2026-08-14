@@ -67,7 +67,7 @@
                                     :variant="preset.key === activePresetKey ? 'primary' : 'ghost'"
                                     @click="onPresetClick(preset)"
                                 >
-                                    {{ preset.label }}
+                                    {{ $tc('TopdataMapperSW6.settings.strategy.preset.' + preset.key, 0, preset.label) }}
                                 </sw-button>
                             </div>
                         {% endblock %}

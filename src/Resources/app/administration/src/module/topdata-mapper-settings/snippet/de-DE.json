@@ -13,7 +13,14 @@
             },
             "strategy": {
                 "title": "Matching-Strategie",
-                "subtitle": "Mengenalgebra über Identifikator-Dimensionen — welches Shopware-Feld welchen Topdata-Identifikator matcht. Der DSL-String ist die einzige Quelle der Wahrheit."
+                "subtitle": "Mengenalgebra über Identifikator-Dimensionen — welches Shopware-Feld welchen Topdata-Identifikator matcht. Der DSL-String ist die einzige Quelle der Wahrheit.",
+                "preset": {
+                    "default": "Standard",
+                    "brand-scoped-mpn": "MPN mit Marken-Bezug",
+                    "article-numbers-only": "Nur Artikelnummern",
+                    "ean-only": "Nur EAN",
+                    "custom": "Individuell"
+                }
             },
             "builder": {
                 "shopField": "Shopware-Feld",

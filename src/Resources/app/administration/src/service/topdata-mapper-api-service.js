@@ -65,6 +65,26 @@ class TopdataMapperApiService extends ApiService {
     }
 
     /**
+     * Server-side paginated/filtered product mappings.
+     */
+    fetchMappings(params) {
+        return this.httpClient.get(this.getApiBasePath() + '/_action/topdata-mapper/mappings', {
+            params,
+            headers: this.getBasicHeaders(),
+        });
+    }
+
+    /**
+     * Server-side paginated/filtered brand mappings.
+     */
+    fetchBrands(params) {
+        return this.httpClient.get(this.getApiBasePath() + '/_action/topdata-mapper/brands', {
+            params,
+            headers: this.getBasicHeaders(),
+        });
+    }
+
+    /**
      * Resolves a conflict without re-import (immediate, status 'user').
      *
      * @param {string} productId - 32-char hex product id

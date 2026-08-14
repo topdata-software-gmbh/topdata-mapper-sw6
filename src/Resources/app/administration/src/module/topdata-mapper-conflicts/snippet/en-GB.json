@@ -3,6 +3,7 @@
         "conflicts": {
             "title": "Topdata mapping conflicts",
             "description": "Resolve products matching multiple Topdata articles",
+            "navLabel": "Conflicts",
             "summary": {
                 "lastImport": "Last import",
                 "never": "Never",

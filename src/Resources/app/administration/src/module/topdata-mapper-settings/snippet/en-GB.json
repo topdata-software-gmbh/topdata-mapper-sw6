@@ -13,7 +13,14 @@
             },
             "strategy": {
                 "title": "Matching strategy",
-                "subtitle": "Set algebra over identifier dimensions — which Shopware field matches which Topdata identifier. The DSL string is the single source of truth."
+                "subtitle": "Set algebra over identifier dimensions — which Shopware field matches which Topdata identifier. The DSL string is the single source of truth.",
+                "preset": {
+                    "default": "Default",
+                    "brand-scoped-mpn": "Brand-scoped MPN",
+                    "article-numbers-only": "Article numbers only",
+                    "ean-only": "EAN only",
+                    "custom": "Custom"
+                }
             },
             "builder": {
                 "shopField": "Shopware field",

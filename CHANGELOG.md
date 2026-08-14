@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and this 
 ## [Unreleased]
 
 ### Added
+- **Admin: "Katalog > Topdata Mapper" navigation group** — new group under
+  the catalog containing the existing conflicts page (moved out of Products)
+  and a new read-only **Mappings** browser (tabs for product and brand
+  mappings, server-side pagination + search, `topdata_mapper:read`). New
+  API routes `GET /api/_action/topdata-mapper/mappings` and
+  `GET /api/_action/topdata-mapper/brands`.
 - **Matching DSL engine** (`src/Service/Dsl/*`, `ProductMappingMatcher_Dsl`):
   set algebra over identifier dimensions — shop field (`product.ean`,
   `product.manufacturer_number`, `product.manufacturer`,
@@ -31,6 +37,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and this 
 - **DSL syntax help modal** in the settings page: a help button next to the
   DSL textarea opens a modal explaining the grammar, shop fields, identifiers,
   allowed pairings (rendered from the pairing matrix) and examples.
+- Settings page preset chip labels are now translated via snippets
+  (de-DE/en-GB), keyed by preset key with the backend label as fallback.
 
 ### Changed
 - **Mapping API v2 contract renames** (lockstep with t2-webservice):

@@ -3,6 +3,7 @@
         "conflicts": {
             "title": "Topdata-Mapping-Konflikte",
             "description": "Auflösung von Produkten, die mehrere Topdata-Artikel matchen",
+            "navLabel": "Konflikte",
             "summary": {
                 "lastImport": "Letzter Import",
                 "never": "Noch nie",

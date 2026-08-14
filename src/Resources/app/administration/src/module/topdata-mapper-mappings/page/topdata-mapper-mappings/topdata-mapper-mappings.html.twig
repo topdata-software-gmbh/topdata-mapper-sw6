@@ -1,0 +1,106 @@
+{% block topdata_mapper_mappings %}
+    <sw-page class="topdata-mapper-mappings">
+        <template #smart-bar-header>
+            <h2>{{ $tc('TopdataMapperSW6.mappings.title') }}</h2>
+        </template>
+
+        <template #content>
+            {% block topdata_mapper_mappings_list %}
+                <sw-card :title="$tc('TopdataMapperSW6.mappings.list.title')">
+                    <template #toolbar>
+                        <sw-container columns="1fr 240px" align="center" gap="0 16px">
+                            <sw-tabs
+                                default-item="products"
+                                @new-item-active="onTabChange"
+                            >
+                                <sw-tabs-item name="products">
+                                    {{ $tc('TopdataMapperSW6.mappings.tabs.products') }}
+                                </sw-tabs-item>
+                                <sw-tabs-item name="brands">
+                                    {{ $tc('TopdataMapperSW6.mappings.tabs.brands') }}
+                                </sw-tabs-item>
+                            </sw-tabs>
+
+                            <sw-text-field
+                                v-model="search"
+                                class="topdata-mapper-mappings__search"
+                                :placeholder="$tc('TopdataMapperSW6.mappings.searchPlaceholder')"
+                                @update:value="onSearchChange"
+                            />
+                        </sw-container>
+                    </template>
+
+                    <sw-data-grid
+                        :dataSource="rows"
+                        :columns="columns"
+                        :isLoading="isLoading"
+                        :showSelection="false"
+                        :showSettings="false"
+                        :allowColumnEdit="false"
+                        :compactMode="false"
+                        :pagination="{ page, limit, total }"
+                        @page-change="onPageChange"
+                        @limit-change="onLimitChange"
+                    >
+                        {% block topdata_mapper_mappings_grid_product %}
+                            <template #column-productNumber="{ item }">
+                                <div class="topdata-mapper-mappings__product">
+                                    <img
+                                        v-if="item.thumbnailUrl"
+                                        :src="item.thumbnailUrl"
+                                        class="topdata-mapper-mappings__thumb"
+                                        alt=""
+                                    >
+                                    <div class="topdata-mapper-mappings__product-info">
+                                        <strong>{{ item.productNumber }}</strong>
+                                        <span>{{ item.productName }}</span>
+                                    </div>
+                                </div>
+                            </template>
+                        {% endblock %}
+
+                        {% block topdata_mapper_mappings_grid_topdata_id %}
+                            <template #column-topdataProductId="{ item }">
+                                <sw-label variant="info" appearance="pill">
+                                    #{{ item.topdataProductId }}
+                                </sw-label>
+                            </template>
+                            <template #column-topdataBrandId="{ item }">
+                                <sw-label variant="info" appearance="pill">
+                                    #{{ item.topdataBrandId }}
+                                </sw-label>
+                            </template>
+                        {% endblock %}
+
+                        {% block topdata_mapper_mappings_grid_dates %}
+                            <template #column-createdAt="{ item }">
+                                <sw-time-ago :date="item.createdAt" />
+                            </template>
+                            <template #column-updatedAt="{ item }">
+                                <sw-time-ago :date="item.updatedAt" />
+                            </template>
+                        {% endblock %}
+
+                        <template #pagination>
+                            <sw-pagination
+                                :page="page"
+                                :limit="limit"
+                                :total="total"
+                                :total-visible="7"
+                                @page-change="onPageChange"
+                                @limit-change="onLimitChange"
+                            />
+                        </template>
+                    </sw-data-grid>
+
+                    <sw-empty-state
+                        v-if="!isLoading && rows.length === 0"
+                        :title="$tc('TopdataMapperSW6.mappings.empty.title')"
+                        :subline="$tc('TopdataMapperSW6.mappings.empty.message')"
+                        icon="regular-list"
+                    />
+                </sw-card>
+            {% endblock %}
+        </template>
+    </sw-page>
+{% endblock %}

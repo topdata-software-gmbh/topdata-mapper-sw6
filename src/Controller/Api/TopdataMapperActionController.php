@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Topdata\TopdataMapperSW6\Service\Db\TdmpConflictResolutionService;
+use Topdata\TopdataMapperSW6\Service\Db\TdmpMappingBrowseService;
 use Topdata\TopdataMapperSW6\Service\Dsl\DslOrExpr;
 use Topdata\TopdataMapperSW6\Service\Dsl\DslPairingMatrix;
 use Topdata\TopdataMapperSW6\Service\Dsl\DslParseException;
@@ -43,6 +44,7 @@ class TopdataMapperActionController extends AbstractController
         private readonly DslParser                        $dslParser,
         private readonly DslSerializer                    $dslSerializer,
         private readonly TdmpConflictResolutionService    $conflictResolutionService,
+        private readonly TdmpMappingBrowseService         $mappingBrowseService,
         private readonly TopdataMapperWebserviceV2Client  $mapperClient,
     ) {
     }
@@ -138,6 +140,60 @@ class TopdataMapperActionController extends AbstractController
             'page'  => $page,
             'limit' => $limit,
             'stats' => $this->conflictResolutionService->getStats(),
+        ]);
+    }
+
+    /**
+     * Product mappings grid for the mappings browser (read-only). Server-side
+     * paginated + searchable (product number / name / Topdata article id).
+     */
+    #[Route(path: '/api/_action/topdata-mapper/mappings', name: 'api.action.topdata-mapper.mappings.list', methods: ['GET'])]
+    public function listMappingsAction(Request $request, Context $context): JsonResponse
+    {
+        $this->_assertPrivilege('topdata_mapper:read', $context);
+
+        $page   = max(1, (int)$request->get('page', 1));
+        $limit  = (int)$request->get('limit', 25);
+        $search = $request->get('search');
+
+        $result = $this->mappingBrowseService->listProductMappings(
+            $page,
+            $limit,
+            is_string($search) ? $search : null
+        );
+
+        return new JsonResponse([
+            'rows'  => $result['rows'],
+            'total' => $result['total'],
+            'page'  => $page,
+            'limit' => $limit,
+        ]);
+    }
+
+    /**
+     * Brand mappings grid for the mappings browser (read-only). Server-side
+     * paginated + searchable (manufacturer name / Topdata brand id).
+     */
+    #[Route(path: '/api/_action/topdata-mapper/brands', name: 'api.action.topdata-mapper.brands.list', methods: ['GET'])]
+    public function listBrandMappingsAction(Request $request, Context $context): JsonResponse
+    {
+        $this->_assertPrivilege('topdata_mapper:read', $context);
+
+        $page   = max(1, (int)$request->get('page', 1));
+        $limit  = (int)$request->get('limit', 25);
+        $search = $request->get('search');
+
+        $result = $this->mappingBrowseService->listBrandMappings(
+            $page,
+            $limit,
+            is_string($search) ? $search : null
+        );
+
+        return new JsonResponse([
+            'rows'  => $result['rows'],
+            'total' => $result['total'],
+            'page'  => $page,
+            'limit' => $limit,
         ]);
     }
 

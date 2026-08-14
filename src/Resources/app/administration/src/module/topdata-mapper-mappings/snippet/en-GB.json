@@ -1,0 +1,27 @@
+{
+    "TopdataMapperSW6": {
+        "mappings": {
+            "title": "Mappings",
+            "description": "Browse product and brand mappings",
+            "list": {
+                "title": "Current mappings"
+            },
+            "tabs": {
+                "products": "Products",
+                "brands": "Brands"
+            },
+            "searchPlaceholder": "Search by number, name or Topdata id ...",
+            "columns": {
+                "product": "Product",
+                "manufacturer": "Manufacturer",
+                "topdataId": "Topdata ID",
+                "createdAt": "Created",
+                "updatedAt": "Updated"
+            },
+            "empty": {
+                "title": "No mappings",
+                "message": "Mappings appear after an import (topdata:mapper:import)."
+            }
+        }
+    }
+}

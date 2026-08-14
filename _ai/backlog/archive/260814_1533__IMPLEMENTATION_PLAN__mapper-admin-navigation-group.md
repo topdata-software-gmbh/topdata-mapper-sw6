@@ -3,7 +3,8 @@ filename: "_ai/backlog/active/260814_1533__IMPLEMENTATION_PLAN__mapper-admin-nav
 title: "TopdataMapperSW6: new \"Katalog > Topdata Mapper\" navigation group with conflicts page + mappings browser"
 createdAt: 2026-08-14 15:33
 updatedAt: 2026-08-14 15:33
-status: draft
+status: completed
+completedAt: 2026-08-14 17:22
 priority: medium
 tags: [shopware, sw6-plugin, mapper, admin, navigation, mapping-browser]
 estimatedComplexity: moderate

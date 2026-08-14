@@ -1,23 +1,23 @@
 // ---- page ----
-import './page/topdata-mapper-conflicts';
+import './page/topdata-mapper-mappings';
 
 // ---- snippets ----
 import './snippet/en-GB.json';
 import './snippet/de-DE.json';
 
 // ---- register module ----
-Shopware.Module.register('topdata-mapper-conflicts', {
+Shopware.Module.register('topdata-mapper-mappings', {
     type: 'plugin',
     name: 'TopdataMapperSW6',
-    title: 'TopdataMapperSW6.conflicts.title',
-    description: 'TopdataMapperSW6.conflicts.description',
+    title: 'TopdataMapperSW6.mappings.title',
+    description: 'TopdataMapperSW6.mappings.description',
     color: '#ff3d58',
     icon: 'regular-plug',
 
     routes: {
         index: {
-            component: 'topdata-mapper-conflicts',
-            path: 'conflicts',
+            component: 'topdata-mapper-mappings',
+            path: 'mappings',
             meta: {
                 privilege: 'topdata_mapper:read',
             },
@@ -26,11 +26,11 @@ Shopware.Module.register('topdata-mapper-conflicts', {
 
     navigation: [
         {
-            label: 'TopdataMapperSW6.conflicts.navLabel',
+            label: 'TopdataMapperSW6.mappings.title',
             color: '#ff3d58',
-            path: 'topdata.mapper.conflicts.index',
-            icon: 'regular-plug',
-            position: 20,
+            path: 'topdata.mapper.mappings.index',
+            icon: 'regular-list',
+            position: 10,
             parent: 'topdata-mapper',
             privilege: 'topdata_mapper:read',
         },

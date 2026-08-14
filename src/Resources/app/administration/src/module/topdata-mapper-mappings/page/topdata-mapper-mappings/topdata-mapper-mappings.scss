@@ -1,0 +1,28 @@
+.topdata-mapper-mappings {
+    &__search {
+        margin-bottom: 0;
+    }
+
+    &__product {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    &__thumb {
+        width: 40px;
+        height: 40px;
+        object-fit: cover;
+        border-radius: 4px;
+    }
+
+    &__product-info {
+        display: flex;
+        flex-direction: column;
+
+        span {
+            color: #52667a;
+            font-size: 12px;
+        }
+    }
+}
