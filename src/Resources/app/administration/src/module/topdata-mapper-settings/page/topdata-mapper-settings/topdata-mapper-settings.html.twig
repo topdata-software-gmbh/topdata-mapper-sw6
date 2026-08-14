@@ -98,7 +98,7 @@
 
                                     <sw-select-field
                                         v-model="leaf.dimension"
-                                        :options="_dimensionOptions(leaf.kind).map(dimension => ({ value: dimension, label: dimensionLabel(dimension) }))"
+                                        :options="dimensionOptions(leaf.kind).map(dimension => ({ value: dimension, label: dimensionLabel(dimension) }))"
                                         :disabled="(leaf.kind === 'property' || leaf.kind === 'customField') && !leaf.group"
                                         @change="onLeafDimensionChange(leaf)"
                                     >

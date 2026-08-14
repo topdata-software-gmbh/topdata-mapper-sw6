@@ -206,7 +206,7 @@ Component.register('topdata-mapper-settings', {
             for (const group of this.groups) {
                 const andParts = [];
                 for (const leaf of group.leaves) {
-                    if (!this._leafComplete(leaf)) {
+                    if (!this.leafComplete(leaf)) {
                         continue;
                     }
                     let shopField = leaf.kind;
@@ -227,7 +227,7 @@ Component.register('topdata-mapper-settings', {
             return orParts.join(' | ');
         },
 
-        _leafComplete(leaf) {
+        leafComplete(leaf) {
             if ((leaf.kind === 'property' || leaf.kind === 'customField') && !leaf.group) {
                 return false;
             }
@@ -235,13 +235,13 @@ Component.register('topdata-mapper-settings', {
             return true;
         },
 
-        _dimensionOptions(kind) {
+        dimensionOptions(kind) {
             return this.allowedPairs[kind] || [];
         },
 
         // ------------------------------------------------------- builder edits
         onLeafShopFieldChange(leaf) {
-            leaf.dimension = this._dimensionOptions(leaf.kind)[0] || null;
+            leaf.dimension = this.dimensionOptions(leaf.kind)[0] || null;
             leaf.group = null;
             leaf.provider = null;
             this.applyBuilder();
@@ -261,7 +261,7 @@ Component.register('topdata-mapper-settings', {
         addLeaf(group) {
             group.leaves.push({
                 kind: this.shopFieldKinds[0],
-                dimension: this._dimensionOptions(this.shopFieldKinds[0])[0] || null,
+                dimension: this.dimensionOptions(this.shopFieldKinds[0])[0] || null,
                 group: null,
                 provider: null,
             });
@@ -276,7 +276,7 @@ Component.register('topdata-mapper-settings', {
             this.groups.push({
                 leaves: [{
                     kind: this.shopFieldKinds[0],
-                    dimension: this._dimensionOptions(this.shopFieldKinds[0])[0] || null,
+                    dimension: this.dimensionOptions(this.shopFieldKinds[0])[0] || null,
                     group: null,
                     provider: null,
                 }],
