@@ -40,6 +40,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and this 
 - Settings page preset chip labels are now translated via snippets
   (de-DE/en-GB), keyed by preset key with the backend label as fallback.
 
+### Fixed
+- **Mappings browser + conflicts grid returned no rows** — the grid queries
+  referenced non-existent SW 6.7 columns (`media_thumbnail.url`,
+  `product.cover_id`), so every list request failed with a SQL error. Queries
+  now join the versioned `product_media` cover chain and `media_thumbnail.path`
+  (URL `/media/<path>`), and pick exactly one translation per
+  product/manufacturer (multi-language shops duplicated rows).
+
 ### Changed
 - **Mapping API v2 contract renames** (lockstep with t2-webservice):
   `products_id` → `topdata_product_id`, `oem` → `mpn`, `distributor` →

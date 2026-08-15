@@ -205,7 +205,11 @@ class TdmpConflictResolutionService
             "SELECT COUNT(*)
                FROM tdmp_product_conflict_resolutions cr
                JOIN product p ON p.id = cr.product_id AND p.version_id = cr.product_version_id
-               LEFT JOIN product_translation pt
+               LEFT JOIN (
+                   SELECT product_id, product_version_id, MAX(name) AS name
+                     FROM product_translation
+                    GROUP BY product_id, product_version_id
+               ) pt
                  ON pt.product_id = cr.product_id AND pt.product_version_id = cr.product_version_id
               WHERE {$whereSql}",
             $params
@@ -216,17 +220,27 @@ class TdmpConflictResolutionService
             "SELECT LOWER(HEX(cr.product_id)) AS product_id,
                     p.product_number AS product_number,
                     pt.name AS product_name,
-                    mt.url AS thumbnail,
+                    mt.path AS thumbnail_path,
                     cr.chosen_topdata_product_id,
                     cr.topdata_product_ids,
                     cr.status,
                     cr.updated_at
                FROM tdmp_product_conflict_resolutions cr
                JOIN product p ON p.id = cr.product_id AND p.version_id = cr.product_version_id
-               LEFT JOIN product_translation pt
+               LEFT JOIN (
+                   SELECT product_id, product_version_id, MAX(name) AS name
+                     FROM product_translation
+                    GROUP BY product_id, product_version_id
+               ) pt
                  ON pt.product_id = cr.product_id AND pt.product_version_id = cr.product_version_id
-               LEFT JOIN media_thumbnail mt
-                 ON mt.media_id = p.cover_id
+               LEFT JOIN product_media pm
+                 ON pm.id = p.product_media_id AND pm.version_id = p.product_media_version_id
+               LEFT JOIN (
+                   SELECT media_id, MIN(path) AS path
+                     FROM media_thumbnail
+                    GROUP BY media_id
+               ) mt
+                 ON mt.media_id = pm.media_id
               WHERE {$whereSql}
               ORDER BY {$orderBy}
               LIMIT {$limit} OFFSET {$offset}",
@@ -239,7 +253,7 @@ class TdmpConflictResolutionService
                 'productId'              => $row['product_id'],
                 'productNumber'          => (string)$row['product_number'],
                 'productName'            => (string)($row['product_name'] ?? ''),
-                'thumbnailUrl'           => $row['thumbnail'] !== null ? (string)$row['thumbnail'] : null,
+                'thumbnailUrl'           => $row['thumbnail_path'] !== null ? '/media/' . $row['thumbnail_path'] : null,
                 'chosenTopdataProductId' => (int)$row['chosen_topdata_product_id'],
                 'candidates'             => json_decode((string)$row['topdata_product_ids'], true) ?? [],
                 'status'                 => (string)$row['status'],
