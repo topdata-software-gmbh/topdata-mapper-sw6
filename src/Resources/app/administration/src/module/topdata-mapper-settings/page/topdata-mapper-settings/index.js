@@ -54,10 +54,14 @@ Component.register('topdata-mapper-settings', {
 
         /**
          * Preset chip highlight: a chip is active iff the current DSL equals
-         * its canonical string; "Custom" is active iff no preset matches.
+         * its preset string after stripping all whitespace (the parser treats
+         * whitespace as insignificant); "Custom" is active iff no preset matches.
          */
         activePresetKey() {
-            const matching = this.presets.find((preset) => preset.dsl !== null && preset.dsl === this.dsl);
+            const normalized = this.dsl.replace(/\s+/g, '');
+            const matching = this.presets.find((preset) => {
+                return preset.dsl !== null && preset.dsl.replace(/\s+/g, '') === normalized;
+            });
 
             return matching ? matching.key : 'custom';
         },

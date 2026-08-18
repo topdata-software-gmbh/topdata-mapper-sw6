@@ -24,10 +24,10 @@ class DslStrategyService
 {
     public const string CONFIG_KEY = 'TopdataMapperSW6.config.matchingStrategy';
 
-    public const string DEFAULT_DSL = 'product.ean:ean | product.manufacturer_number:mpn | product.manufacturer_number:pcd | product.product_number:articleNumbers';
+    public const string DEFAULT_DSL = "product.ean:ean |\nproduct.manufacturer_number:mpn |\nproduct.manufacturer_number:pcd |\nproduct.product_number:articleNumbers";
 
     /** Brand-scoped MPN: explicit `( )` group makes the `&`-binding explicit (redundant but clearer). */
-    public const string BRAND_SCOPED_MPN_DSL = 'product.ean:ean | (product.manufacturer:topdataBrandIds & product.manufacturer_number:mpn) | product.product_number:articleNumbers';
+    public const string BRAND_SCOPED_MPN_DSL = "product.ean:ean |\n(product.manufacturer:topdataBrandIds & product.manufacturer_number:mpn) |\nproduct.product_number:articleNumbers";
 
     public const string ARTICLE_NUMBERS_ONLY_DSL = 'product.product_number:articleNumbers';
 
