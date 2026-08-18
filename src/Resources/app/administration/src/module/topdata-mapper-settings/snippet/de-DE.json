@@ -24,7 +24,6 @@
             },
             "dsl": {
                 "label": "DSL",
-                "helpText": "Mengenalgebra: '&' innerhalb einer Gruppe (UND), '|' zwischen Gruppen (ODER). Beispiel: product.ean:ean | product.manufacturer_number:mpn",
                 "copy": "Kopieren",
                 "help": "DSL-Hilfe"
             },

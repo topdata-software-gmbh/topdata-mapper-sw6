@@ -24,7 +24,6 @@
             },
             "dsl": {
                 "label": "DSL",
-                "helpText": "Set algebra: '&' within a group (AND), '|' between groups (OR). Example: product.ean:ean | product.manufacturer_number:mpn",
                 "copy": "Copy",
                 "help": "DSL help"
             },

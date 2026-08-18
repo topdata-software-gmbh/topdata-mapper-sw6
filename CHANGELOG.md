@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and this 
 ## [Unreleased]
 
 ### Removed
+- **Help tooltip on the DSL textarea** — the question-mark help icon next to
+  the DSL input is gone; the DSL-Hilfe modal remains the single source of
+  syntax help (the truncated tooltip text was confusing).
 - **Visual DSL builder** from the settings strategy editor — the DSL string
   (with debounced live validation) and the preset chips are now the only
   editor. `GET /api/_action/topdata-mapper/strategy` no longer returns
