@@ -15,6 +15,7 @@ use Topdata\TopdataFoundationSW6\Command\AbstractTopdataCommand;
 use Topdata\TopdataFoundationSW6\Helper\CliStyle;
 use Topdata\TopdataFoundationSW6\Service\CliApiCredentialPrompter;
 use Topdata\TopdataFoundationSW6\Util\CliLogger;
+use Topdata\TopdataMapperSW6\Service\Dsl\DslOrExpr;
 use Topdata\TopdataMapperSW6\Service\DslStrategyService;
 use Topdata\TopdataMapperSW6\Service\MappingBuildStats;
 use Topdata\TopdataMapperSW6\Service\ProductMappingMatcher_Dsl;
@@ -64,6 +65,10 @@ class Command_TdmpImport extends AbstractTopdataCommand
 
         $mapping = strtolower((string)$input->getOption('mapping'));
 
+        if ($mapping !== 'brand') {
+            $this->_printStrategyTable($this->strategyService->getConfiguredStrategy());
+        }
+
         $stats = match ($mapping) {
             'product' => [$this->mappingBuildService->buildProductMappings()],
             'brand'   => [$this->mappingBuildService->buildBrandMappings()],
@@ -99,6 +104,36 @@ class Command_TdmpImport extends AbstractTopdataCommand
             $this->mappingBuildService->buildProductMappings(),
             $this->mappingBuildService->buildBrandMappings(),
         ];
+    }
+
+    /**
+     * Prints the configured matching strategy as a flat table of its leaves
+     * (parens, `&` and `|` are implied by the grammar and not rendered).
+     */
+    private function _printStrategyTable(DslOrExpr $strategy): void
+    {
+        $rows = [];
+        foreach (ProductMappingMatcher_Dsl::collectLeaves($strategy) as $leaf) {
+            $rows[] = [
+                $this->_cell($leaf->shopField),
+                $this->_cell($leaf->dimensionVariant !== null ? $leaf->dimension . '.' . $leaf->dimensionVariant : $leaf->dimension),
+            ];
+        }
+
+        $tbl = $this->cliStyle->createTable();
+        $tbl->setStyle('box');
+        $tbl->getStyle()
+            ->setPadType(STR_PAD_BOTH)
+            ->setHeaderTitleFormat('<fg=black;bg=cyan;options=bold> %s </>');
+        $tbl->setHeaders([
+            $this->_cell('Shop field', ['fg' => 'cyan', 'options' => 'bold']),
+            $this->_cell('API dimension', ['fg' => 'cyan', 'options' => 'bold']),
+        ]);
+        $tbl->setRows($rows);
+        $tbl->setHeaderTitle('Matching strategy');
+        $tbl->render();
+
+        $this->cliStyle->newLine();
     }
 
     /**

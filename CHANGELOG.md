@@ -73,9 +73,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and this 
   (constant, see `TdmpProductService::LIVE_VERSION_HEX`) so the FK
   `fk_tdmp_product_product (product_id, product_version_id) → product(id,
   version_id) ON DELETE CASCADE` is safe against Shopware's versioning.
-- The product build requests `['ean', 'mpn', 'pcd', 'articleNumbers']` and
-  matches via the configured DSL strategy instead of the hardcoded EAN/OEM
-  logic.
+- The product build requests only the identifier types the configured DSL
+  strategy references (e.g. only `ean` for `product.ean:ean`) instead of
+  always fetching `['ean', 'mpn', 'pcd', 'articleNumbers']`, and matches via
+  the configured DSL strategy instead of the hardcoded EAN/OEM logic. `mpn`
+  is still requested when the strategy references `topdataBrandIds` (API
+  contract: topdataBrandIds is only returned when mpn is requested).
+- `topdata:mapper:import` now prints the configured matching strategy as a
+  flat table (shop field × API dimension) at the start of the product
+  import — parens, `&` and `|` are implied by the grammar and not rendered.
 - The mapper import now uses keyset pagination (`cursor` / `next_cursor`)
   instead of `start` offsets when streaming `/v2/mapping/product` (brand
   import stays offset-based). The client throws when the webservice reports

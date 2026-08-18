@@ -66,24 +66,71 @@ class ProductMappingMatcher_Dsl implements ProductMappingMatcherInterface
 
     /**
      * Whether the strategy references the `topdataBrandIds` dimension (needs
-     * tdmp_brand to be built first / guards --mapping=product alone). Walk is
-     * recursive — the dimension may sit inside a `( ... )` group.
+     * tdmp_brand to be built first / guards --mapping=product alone).
      */
     public static function referencesTopdataBrandIds(DslOrExpr $strategy): bool
     {
-        foreach ($strategy->groups as $group) {
-            foreach ($group->items as $item) {
-                if ($item instanceof DslLeaf) {
-                    if ($item->dimension === DslPairingMatrix::DIMENSION_BRAND_IDS) {
-                        return true;
-                    }
-                } elseif (self::referencesTopdataBrandIds($item)) {
-                    return true;
-                }
+        foreach (self::collectLeaves($strategy) as $leaf) {
+            if ($leaf->dimension === DslPairingMatrix::DIMENSION_BRAND_IDS) {
+                return true;
             }
         }
 
         return false;
+    }
+
+    /**
+     * All leaves of the strategy, depth-first, parens flattened — the CLI
+     * prints them as a flat mapping table (operators are implied, not shown).
+     *
+     * @return list<DslLeaf>
+     */
+    public static function collectLeaves(DslOrExpr $strategy): array
+    {
+        $leaves = [];
+        foreach ($strategy->groups as $group) {
+            foreach ($group->items as $item) {
+                if ($item instanceof DslLeaf) {
+                    $leaves[] = $item;
+                } else {
+                    array_push($leaves, ...self::collectLeaves($item));
+                }
+            }
+        }
+
+        return $leaves;
+    }
+
+    /**
+     * The API identifier types the build must request for this strategy —
+     * only the dimensions the leaves actually reference (plus `mpn` when
+     * `topdataBrandIds` is referenced: the API returns topdataBrandIds only
+     * when mpn is among the requested types).
+     *
+     * @return string[] canonical order: ean, mpn, pcd, articleNumbers
+     */
+    public static function neededApiTypes(DslOrExpr $strategy): array
+    {
+        $dimensions = [];
+        foreach (self::collectLeaves($strategy) as $leaf) {
+            $dimensions[$leaf->dimension] = true;
+        }
+
+        $types = [];
+        if (isset($dimensions[DslPairingMatrix::DIMENSION_EAN])) {
+            $types[] = DslPairingMatrix::DIMENSION_EAN;
+        }
+        if (isset($dimensions[DslPairingMatrix::DIMENSION_MPN]) || isset($dimensions[DslPairingMatrix::DIMENSION_BRAND_IDS])) {
+            $types[] = DslPairingMatrix::DIMENSION_MPN;
+        }
+        if (isset($dimensions[DslPairingMatrix::DIMENSION_PCD])) {
+            $types[] = DslPairingMatrix::DIMENSION_PCD;
+        }
+        if (isset($dimensions[DslPairingMatrix::DIMENSION_ARTICLE_NUMBERS])) {
+            $types[] = DslPairingMatrix::DIMENSION_ARTICLE_NUMBERS;
+        }
+
+        return $types;
     }
 
     public function matchRow(object $row): array

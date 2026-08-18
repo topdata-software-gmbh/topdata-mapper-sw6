@@ -32,8 +32,6 @@ class TdmpMappingBuildService
 {
     public const int PAGE_SIZE = 1000;
 
-    public const array PRODUCT_TYPES = ['ean', 'mpn', 'pcd', 'articleNumbers'];
-
     public function __construct(
         private readonly TdmpProductService               $tdmpProductService,
         private readonly TdmpBrandService                 $tdmpBrandService,
@@ -59,6 +57,9 @@ class TdmpMappingBuildService
         $strategy = $this->strategyService->getConfiguredStrategy();
         $this->productMatcher->setStrategy($strategy);
 
+        $types = ProductMappingMatcher_Dsl::neededApiTypes($strategy);
+        CliLogger::info('Requesting mapping API types: ' . implode(', ', $types));
+
         if (ProductMappingMatcher_Dsl::referencesTopdataBrandIds($strategy) && $this->tdmpBrandService->count() === 0) {
             CliLogger::warning('The matching strategy references topdataBrandIds but tdmp_brand is empty — the brand-scoped leaves will match nothing. Run the brand build first (topdata:mapper:import --mapping=brand).');
         }
@@ -71,7 +72,7 @@ class TdmpMappingBuildService
         $page   = 0;
         while (true) {
             $page++;
-            $response = $this->mapperClient->getProductMappings(self::PRODUCT_TYPES, $cursor, self::PAGE_SIZE, $language);
+            $response = $this->mapperClient->getProductMappings($types, $cursor, self::PAGE_SIZE, $language);
             $apiRows  = $response->rows ?? [];
 
             if (count($apiRows) === 0) {
