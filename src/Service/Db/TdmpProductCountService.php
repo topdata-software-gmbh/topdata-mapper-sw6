@@ -7,10 +7,13 @@ namespace Topdata\TopdataMapperSW6\Service\Db;
 use Doctrine\DBAL\Connection;
 
 /**
- * Counts Shopware products by identifier dimension (ean / mpn / article
- * number / any) and per custom-field name — the DB-side debugging companion
- * of the mapping import (e.g. explaining an import run with zero matches:
- * are the identifiers even present in the shop?).
+ * Counts Shopware products by identifier dimension (ean / mpn) and per
+ * custom-field name — the DB-side debugging companion of the mapping import
+ * (e.g. explaining an import run with zero matches: are the identifiers even
+ * present in the shop?).
+ *
+ * Article number is not counted: it is mandatory and unique in Shopware 6 and
+ * would always be 100%.
  *
  * Mirrors the matcher's semantics: only live-version products count
  * (TdmpProductService::LIVE_VERSION_HEX), variants are included unless
@@ -28,17 +31,20 @@ class TdmpProductCountService
     /**
      * Counts products per identifier dimension in one aggregate query.
      *
+     * EAN and MPN are the only dimensions worth counting: article number
+     * (`product_number`) is mandatory and unique in Shopware 6, so it would
+     * always be 100% — no debugging value.
+     *
      * The "usable" counts exclude junk placeholder values by default: EAN
      * counts only values containing at least one digit (`-` / `n/a` normalize
-     * to '' via UtilIdentifierNormalizer and can never match), MPN and article
-     * number count non-blank values that are not placeholder tokens (`-`,
-     * `n/a`, trimmed, case-insensitive — stricter than the matcher, which
-     * technically keeps a `-` MPN). The `placeholder*` counters flag the
-     * excluded products (EAN: non-empty values without any digit; MPN /
-     * article number: the placeholder tokens) — the command renders them only
-     * with `--show-placeholders`.
+     * to '' via UtilIdentifierNormalizer and can never match), MPN counts
+     * non-blank values that are not placeholder tokens (`-`, `n/a`, trimmed,
+     * case-insensitive — stricter than the matcher, which technically keeps
+     * a `-` MPN). The `placeholder*` counters flag the excluded products
+     * (EAN: non-empty values without any digit; MPN: the placeholder tokens)
+     * — the command renders them only with `--show-placeholders`.
      *
-     * @return array{total: int, ean: int, mpn: int, articleNumber: int, any: int, placeholderEan: int, placeholderMpn: int, placeholderArticleNumber: int}
+     * @return array{total: int, ean: int, mpn: int, placeholderEan: int, placeholderMpn: int}
      */
     public function countIdentifiers(bool $parentsOnly = false): array
     {
@@ -50,32 +56,19 @@ class TdmpProductCountService
                     WHEN TRIM(manufacturer_number) <> ''
                       AND LOWER(TRIM(manufacturer_number)) NOT IN ('-', 'n/a')
                     THEN 1 ELSE 0 END) AS with_mpn,
-                SUM(CASE
-                    WHEN TRIM(product_number) <> ''
-                      AND LOWER(TRIM(product_number)) NOT IN ('-', 'n/a')
-                    THEN 1 ELSE 0 END) AS with_article_number,
-                SUM(CASE
-                    WHEN ean REGEXP '[0-9]'
-                      OR (TRIM(manufacturer_number) <> '' AND LOWER(TRIM(manufacturer_number)) NOT IN ('-', 'n/a'))
-                      OR (TRIM(product_number) <> '' AND LOWER(TRIM(product_number)) NOT IN ('-', 'n/a'))
-                    THEN 1 ELSE 0 END) AS with_any,
                 SUM(CASE WHEN ean IS NOT NULL AND ean <> '' AND ean NOT REGEXP '[0-9]' THEN 1 ELSE 0 END) AS placeholder_ean,
-                SUM(CASE WHEN LOWER(TRIM(manufacturer_number)) IN ('-', 'n/a') THEN 1 ELSE 0 END) AS placeholder_mpn,
-                SUM(CASE WHEN LOWER(TRIM(product_number)) IN ('-', 'n/a') THEN 1 ELSE 0 END) AS placeholder_article_number
+                SUM(CASE WHEN LOWER(TRIM(manufacturer_number)) IN ('-', 'n/a') THEN 1 ELSE 0 END) AS placeholder_mpn
                FROM product
               WHERE version_id = 0x" . TdmpProductService::LIVE_VERSION_HEX
                 . ($parentsOnly ? ' AND parent_id IS NULL' : '')
         ) ?: [];
 
         return [
-            'total'                    => (int)($row['total'] ?? 0),
-            'ean'                      => (int)($row['with_ean'] ?? 0),
-            'mpn'                      => (int)($row['with_mpn'] ?? 0),
-            'articleNumber'            => (int)($row['with_article_number'] ?? 0),
-            'any'                      => (int)($row['with_any'] ?? 0),
-            'placeholderEan'           => (int)($row['placeholder_ean'] ?? 0),
-            'placeholderMpn'           => (int)($row['placeholder_mpn'] ?? 0),
-            'placeholderArticleNumber' => (int)($row['placeholder_article_number'] ?? 0),
+            'total'          => (int)($row['total'] ?? 0),
+            'ean'            => (int)($row['with_ean'] ?? 0),
+            'mpn'            => (int)($row['with_mpn'] ?? 0),
+            'placeholderEan' => (int)($row['placeholder_ean'] ?? 0),
+            'placeholderMpn' => (int)($row['placeholder_mpn'] ?? 0),
         ];
     }
 

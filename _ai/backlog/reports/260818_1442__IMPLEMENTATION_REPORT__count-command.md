@@ -2,7 +2,7 @@
 filename: "_ai/backlog/reports/260818_1442__IMPLEMENTATION_REPORT__count-command.md"
 title: "Report: topdata:mapper:count debug command"
 createdAt: 2026-08-18 14:42
-updatedAt: 2026-08-18 15:15
+updatedAt: 2026-08-18 15:32
 planFile: "_ai/backlog/active/260818_1436__IMPLEMENTATION_PLAN__count-command.md"
 project: "topdata-mapper-sw6"
 status: completed
@@ -200,3 +200,14 @@ With `--show-placeholders`:
 Numbers cross-checked against raw SQL on `sw67-mariadb` (identical; per
 dimension: usable + placeholder = total). `--parents-only` run (15,107):
 EAN 13,596 usable / 1,511 placeholder, MPN 13,638 / 1,469 placeholder.
+
+**Follow-up (2) — article number rows removed** (same day): `product_number`
+is mandatory and unique in Shopware 6 (`ProductDefinition.php:163`,
+`Required` flag), so "Article number" was always 100% and "Any identifier"
+(the OR of all three dimensions) trivially equaled the total — no debugging
+value. Both rows and their service counters (`with_article_number`,
+`with_any`, `placeholder_article_number`) were removed from
+`TdmpProductCountService::countIdentifiers()` and
+`Command_TdmpCount::_printIdentifierTable()`; the table now shows EAN, MPN
+(+ optional placeholder sub-rows) and the Total row. Docs updated. Verified
+in the dev shop (EAN 17,703 / MPN 17,703 / total 19,504).

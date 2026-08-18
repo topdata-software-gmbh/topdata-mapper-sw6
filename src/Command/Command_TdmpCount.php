@@ -16,10 +16,11 @@ use Topdata\TopdataFoundationSW6\Util\CliLogger;
 use Topdata\TopdataMapperSW6\Service\Db\TdmpProductCountService;
 
 /**
- * Counts Shopware products by identifier dimension (ean / mpn / article
- * number) and optionally per custom-field name — the debugging companion of
+ * Counts Shopware products by identifier dimension (ean / mpn) and
+ * optionally per custom-field name — the debugging companion of
  * `topdata:mapper:import` (e.g. to explain a run with zero matches: are the
- * identifiers even present in the shop?).
+ * identifiers even present in the shop?). Article number is skipped: it is
+ * mandatory in Shopware 6 and would always be 100%.
  *
  * DB-side only, no API call. Scope: live-version products; variants included
  * unless --parents-only is given. Counts exclude junk placeholder values
@@ -30,7 +31,7 @@ use Topdata\TopdataMapperSW6\Service\Db\TdmpProductCountService;
  */
 #[AsCommand(
     name: 'topdata:mapper:count',
-    description: 'Count shop products with EAN / MPN / article number (and optionally per custom field)'
+    description: 'Count shop products with EAN / MPN (and optionally per custom field)'
 )]
 class Command_TdmpCount extends AbstractTopdataCommand
 {
@@ -87,15 +88,13 @@ class Command_TdmpCount extends AbstractTopdataCommand
     }
 
     /**
-     * @param array{total: int, ean: int, mpn: int, articleNumber: int, any: int, placeholderEan: int, placeholderMpn: int, placeholderArticleNumber: int} $counts
+     * @param array{total: int, ean: int, mpn: int, placeholderEan: int, placeholderMpn: int} $counts
      */
     private function _printIdentifierTable(array $counts, bool $showPlaceholders): void
     {
         $rows = [
             ['EAN', $counts['ean'], $counts['placeholderEan'], 'product.ean', 'placeholder-only (no digit)'],
             ['MPN', $counts['mpn'], $counts['placeholderMpn'], 'product.manufacturer_number', 'placeholder-only (-, n/a)'],
-            ['Article number', $counts['articleNumber'], $counts['placeholderArticleNumber'], 'product.product_number', 'placeholder-only (-, n/a)'],
-            ['Any identifier', $counts['any'], 0, '', ''],
         ];
 
         $tableRows = [];
