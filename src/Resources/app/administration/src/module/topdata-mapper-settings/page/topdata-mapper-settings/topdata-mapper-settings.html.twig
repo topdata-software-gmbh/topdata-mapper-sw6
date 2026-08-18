@@ -8,7 +8,6 @@
             <sw-button
                 variant="primary"
                 :isLoading="isSaving"
-                :disabled="isSaving || !validationValid || !isDirty"
                 @click="save"
             >
                 {{ $tc('TopdataMapperSW6.settings.save.button') }}
