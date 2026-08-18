@@ -26,7 +26,10 @@ feed+finder infrastructure):
 `TopdataMapperSW6.config.matchingStrategy` holds a set algebra over identifier
 dimensions — which Shopware field matches which Topdata identifier. The
 **settings page** (Settings → Plugins → Topdata Mapper) is the preferred
-editor: preset chips, visual builder, live validation. The import fails
+editor: preset chips and the DSL string with live validation (a syntax help
+modal documents the grammar). The DSL supports `( )` groups to override the
+default precedence (`&` binds tighter than `|`); `(` and `)` are reserved
+characters and cannot appear in property/custom-field names. The import fails
 loudly on an invalid stored strategy.
 
 Default: `product.ean:ean | product.manufacturer_number:mpn | product.manufacturer_number:pcd | product.product_number:articleNumbers`

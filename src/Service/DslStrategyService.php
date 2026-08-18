@@ -26,7 +26,7 @@ class DslStrategyService
 
     public const string DEFAULT_DSL = 'product.ean:ean | product.manufacturer_number:mpn | product.manufacturer_number:pcd | product.product_number:articleNumbers';
 
-    /** Brand-scoped MPN: parens are not part of the grammar — `&` binds tighter than `|`. */
+    /** Brand-scoped MPN: `&` binds tighter than `|`; `( )` groups are allowed but not needed here. */
     public const string BRAND_SCOPED_MPN_DSL = 'product.ean:ean | product.manufacturer:topdataBrandIds & product.manufacturer_number:mpn | product.product_number:articleNumbers';
 
     public const string ARTICLE_NUMBERS_ONLY_DSL = 'product.product_number:articleNumbers';

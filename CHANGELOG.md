@@ -5,6 +5,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and this 
 
 ## [Unreleased]
 
+### Removed
+- **Visual DSL builder** from the settings strategy editor — the DSL string
+  (with debounced live validation) and the preset chips are now the only
+  editor. `GET /api/_action/topdata-mapper/strategy` no longer returns
+  `providers`; `POST .../validate-strategy` no longer returns `ast`;
+  `DslSerializer::toArray()` removed.
+
+### Changed
+- **DSL grammar: `( )` groups for explicit precedence** — parenthesized
+  sub-expressions (`(a | b) & c`) now parse and evaluate; `&` still binds
+  tighter than `|` without parens. Recursive-descent parser
+  (`DslAndExpr::items`), canonical serializer (parens preserved), matcher
+  evaluation and the provider-existence check are recursive now. Existing
+  flat strategies (default + presets) are unaffected.
+
 ### Added
 - **Admin: "Katalog > Topdata Mapper" navigation group** — new group under
   the catalog containing the existing conflicts page (moved out of Products)

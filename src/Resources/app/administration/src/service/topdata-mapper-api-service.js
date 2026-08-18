@@ -24,7 +24,7 @@ class TopdataMapperApiService extends ApiService {
     }
 
     /**
-     * Module init: current DSL, presets, pairing matrix, credential status, providers.
+     * Module init: current DSL, presets, pairing matrix, credential status.
      */
     getStrategy() {
         return this.httpClient.get(this.getApiBasePath() + '/_action/topdata-mapper/strategy', {
@@ -44,7 +44,7 @@ class TopdataMapperApiService extends ApiService {
     }
 
     /**
-     * Debounced live validation → {valid, ast, error}.
+     * Debounced live validation → {valid, error}.
      *
      * @param {string} dsl
      */

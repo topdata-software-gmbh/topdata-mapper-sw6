@@ -7,6 +7,7 @@ namespace Topdata\TopdataMapperSW6\Service;
 use Doctrine\DBAL\Connection;
 use Topdata\TopdataMapperSW6\Helper\UtilIdentifierNormalizer;
 use Topdata\TopdataMapperSW6\Service\Db\TdmpProductService;
+use Topdata\TopdataMapperSW6\Service\Dsl\DslAndExpr;
 use Topdata\TopdataMapperSW6\Service\Dsl\DslLeaf;
 use Topdata\TopdataMapperSW6\Service\Dsl\DslOrExpr;
 use Topdata\TopdataMapperSW6\Service\Dsl\DslPairingMatrix;
@@ -65,13 +66,18 @@ class ProductMappingMatcher_Dsl implements ProductMappingMatcherInterface
 
     /**
      * Whether the strategy references the `topdataBrandIds` dimension (needs
-     * tdmp_brand to be built first / guards --mapping=product alone).
+     * tdmp_brand to be built first / guards --mapping=product alone). Walk is
+     * recursive — the dimension may sit inside a `( ... )` group.
      */
     public static function referencesTopdataBrandIds(DslOrExpr $strategy): bool
     {
         foreach ($strategy->groups as $group) {
-            foreach ($group->leaves as $leaf) {
-                if ($leaf->dimension === DslPairingMatrix::DIMENSION_BRAND_IDS) {
+            foreach ($group->items as $item) {
+                if ($item instanceof DslLeaf) {
+                    if ($item->dimension === DslPairingMatrix::DIMENSION_BRAND_IDS) {
+                        return true;
+                    }
+                } elseif (self::referencesTopdataBrandIds($item)) {
                     return true;
                 }
             }
@@ -86,28 +92,62 @@ class ProductMappingMatcher_Dsl implements ProductMappingMatcherInterface
             throw new \RuntimeException('No matching strategy set — call setStrategy() before matchRow().');
         }
 
+        return $this->_evaluateExpr($this->strategy, $row);
+    }
+
+    /**
+     * @return list<array{product_id: string}> deduped union over the OR groups
+     */
+    private function _evaluateExpr(DslOrExpr $expr, object $row): array
+    {
         $matches = [];
-        foreach ($this->strategy->groups as $group) {
-            $groupMatches = null;
-            foreach ($group->leaves as $leaf) {
-                $leafMatches = $this->_evaluateLeaf($leaf, $row);
-                if (empty($leafMatches)) {
-                    $groupMatches = [];
-                    break;
-                }
-                $groupMatches = $groupMatches === null
-                    ? $leafMatches
-                    : $this->_intersect($groupMatches, $leafMatches);
-                if (empty($groupMatches)) {
-                    break;
-                }
-            }
-            foreach ($groupMatches ?? [] as $product) {
-                $matches[] = $product;
-            }
+        foreach ($expr->groups as $group) {
+            $matches = $this->_union($matches, $this->_evaluateAnd($group, $row));
         }
 
         return $matches;
+    }
+
+    /**
+     * @return list<array{product_id: string}> intersection over the AND operands
+     */
+    private function _evaluateAnd(DslAndExpr $group, object $row): array
+    {
+        $result = null;
+        foreach ($group->items as $item) {
+            $itemMatches = $item instanceof DslLeaf
+                ? $this->_evaluateLeaf($item, $row)
+                : $this->_evaluateExpr($item, $row);
+            if (empty($itemMatches)) {
+                return [];
+            }
+            $result = $result === null ? $itemMatches : $this->_intersect($result, $itemMatches);
+            if (empty($result)) {
+                return [];
+            }
+        }
+
+        return $result ?? [];
+    }
+
+    /**
+     * @param list<array{product_id: string}> $a
+     * @param list<array{product_id: string}> $b
+     * @return list<array{product_id: string}> deduped union
+     */
+    private function _union(array $a, array $b): array
+    {
+        $seen = [];
+        foreach ($a as $product) {
+            $seen[$product['product_id']] = true;
+        }
+        foreach ($b as $product) {
+            if (!isset($seen[$product['product_id']])) {
+                $a[] = $product;
+            }
+        }
+
+        return $a;
     }
 
     /**

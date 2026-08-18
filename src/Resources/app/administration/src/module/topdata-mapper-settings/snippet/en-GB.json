@@ -22,17 +22,6 @@
                     "custom": "Custom"
                 }
             },
-            "builder": {
-                "shopField": "Shopware field",
-                "dimension": "Topdata identifier",
-                "provider": "Provider",
-                "allProviders": "All providers",
-                "propertyGroup": "Property group",
-                "customField": "Custom field",
-                "addLeaf": "Add condition (AND)",
-                "addGroup": "Add condition group (OR)",
-                "orSeparator": "— or —"
-            },
             "dsl": {
                 "label": "DSL",
                 "helpText": "Set algebra: '&' within a group (AND), '|' between groups (OR). Example: product.ean:ean | product.manufacturer_number:mpn",
@@ -41,12 +30,13 @@
             },
             "dslHelp": {
                 "title": "DSL syntax reference",
-                "intro": "The matching strategy is a set algebra over identifier dimensions: it defines which Shopware field is matched against which Topdata identifier. The DSL string is the single source of truth — the visual builder above is a live-synced view over it.",
+                "intro": "The matching strategy is a set algebra over identifier dimensions: it defines which Shopware field is matched against which Topdata identifier. The DSL string is the single source of truth — start from a preset chip or type the DSL directly.",
                 "grammar": {
                     "title": "Grammar",
                     "leaf": "Each condition (leaf) pairs a Shopware field with a Topdata identifier:",
-                    "and": "AND — all leaves in a group must match",
-                    "or": "OR — at least one group must match"
+                    "and": "AND — all operands in a group must match",
+                    "or": "OR — at least one group must match",
+                    "parens": "( ) — group a sub-expression to override precedence (& binds tighter than |)"
                 },
                 "shopFields": {
                     "title": "Shopware fields",
@@ -74,7 +64,8 @@
                     "title": "Examples",
                     "one": "Match products by EAN first, fall back to the manufacturer number.",
                     "two": "Both conditions must match: EAN and manufacturer.",
-                    "three": "Match the product number only against article numbers of provider 4123."
+                    "three": "Match the product number only against article numbers of provider 4123.",
+                    "four": "Parentheses: match by EAN or article number, restricted to one manufacturer brand."
                 },
                 "close": "Close"
             },
@@ -101,16 +92,6 @@
             "copy": {
                 "title": "DSL copied",
                 "message": "The DSL string was copied to the clipboard."
-            },
-            "shopField": {
-                "product": {
-                    "ean": "Product: EAN field (product.ean)",
-                    "manufacturer_number": "Product: manufacturer number (product.manufacturer_number)",
-                    "manufacturer": "Product: manufacturer (product.manufacturer)",
-                    "product_number": "Product: product number (product.product_number)"
-                },
-                "property": "Property group (property.<group>)",
-                "customField": "Custom field (customField.<name>)"
             },
             "dimension": {
                 "ean": "ean",

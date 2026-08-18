@@ -22,17 +22,6 @@
                     "custom": "Individuell"
                 }
             },
-            "builder": {
-                "shopField": "Shopware-Feld",
-                "dimension": "Topdata-Identifikator",
-                "provider": "Anbieter",
-                "allProviders": "Alle Anbieter",
-                "propertyGroup": "Eigenschaftsgruppe",
-                "customField": "Custom-Feld",
-                "addLeaf": "Bedingung hinzufügen (UND)",
-                "addGroup": "Bedingungsgruppe hinzufügen (ODER)",
-                "orSeparator": "— oder —"
-            },
             "dsl": {
                 "label": "DSL",
                 "helpText": "Mengenalgebra: '&' innerhalb einer Gruppe (UND), '|' zwischen Gruppen (ODER). Beispiel: product.ean:ean | product.manufacturer_number:mpn",
@@ -41,12 +30,13 @@
             },
             "dslHelp": {
                 "title": "DSL-Syntax-Referenz",
-                "intro": "Die Matching-Strategie ist eine Mengenalgebra über Identifikator-Dimensionen: Sie definiert, welches Shopware-Feld gegen welchen Topdata-Identifikator gematcht wird. Der DSL-String ist die einzige Quelle der Wahrheit — der visuelle Builder oben ist eine synchronisierte Ansicht darauf.",
+                "intro": "Die Matching-Strategie ist eine Mengenalgebra über Identifikator-Dimensionen: Sie definiert, welches Shopware-Feld gegen welchen Topdata-Identifikator gematcht wird. Der DSL-String ist die einzige Quelle der Wahrheit — starten Sie mit einem Preset oder geben Sie den DSL-String direkt ein.",
                 "grammar": {
                     "title": "Grammatik",
                     "leaf": "Jede Bedingung (Leaf) paart ein Shopware-Feld mit einem Topdata-Identifikator:",
-                    "and": "UND — alle Leaves in einer Gruppe müssen matchen",
-                    "or": "ODER — mindestens eine Gruppe muss matchen"
+                    "and": "UND — alle Operanden in einer Gruppe müssen matchen",
+                    "or": "ODER — mindestens eine Gruppe muss matchen",
+                    "parens": "( ) — Teilausdruck gruppieren, um die Präzedenz zu überschreiben (& bindet stärker als |)"
                 },
                 "shopFields": {
                     "title": "Shopware-Felder",
@@ -74,7 +64,8 @@
                     "title": "Beispiele",
                     "one": "Produkte zuerst per EAN matchen, sonst über die Herstellernummer.",
                     "two": "Beide Bedingungen müssen matchen: EAN und Hersteller.",
-                    "three": "Produktnummer nur gegen Artikelnummern von Anbieter 4123 matchen."
+                    "three": "Produktnummer nur gegen Artikelnummern von Anbieter 4123 matchen.",
+                    "four": "Klammern: Match per EAN oder Artikelnummer, eingeschränkt auf eine Herstellermarke."
                 },
                 "close": "Schließen"
             },
@@ -101,16 +92,6 @@
             "copy": {
                 "title": "DSL kopiert",
                 "message": "Der DSL-String wurde in die Zwischenablage kopiert."
-            },
-            "shopField": {
-                "product": {
-                    "ean": "Produkt: EAN-Feld (product.ean)",
-                    "manufacturer_number": "Produkt: Herstellernummer (product.manufacturer_number)",
-                    "manufacturer": "Produkt: Hersteller (product.manufacturer)",
-                    "product_number": "Produkt: Produktnummer (product.product_number)"
-                },
-                "property": "Eigenschaftsgruppe (property.<gruppe>)",
-                "customField": "Custom-Feld (customField.<name>)"
             },
             "dimension": {
                 "ean": "ean",

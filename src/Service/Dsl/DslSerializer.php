@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Topdata\TopdataMapperSW6\Service\Dsl;
 
 /**
- * Serializes a DSL AST back to the canonical DSL string. The frontend's visual
- * builder writes DSL via this serializer on the JS side (small mirror of the
- * grammar); PHP keeps the canonical form for validation.
+ * Serializes a DSL AST back to the canonical DSL string (stored on save).
+ * The frontend only sends/validates DSL strings — there is no JS serializer.
+ * Nested `( ... )` groups are re-emitted verbatim (Phase 2).
  *
- * 08/2026 created
+ * 08/2026 created, 08/2026 toArray() removed (visual builder removed)
  */
 class DslSerializer
 {
@@ -17,38 +17,22 @@ class DslSerializer
     {
         $groups = [];
         foreach ($ast->groups as $group) {
-            $leaves = [];
-            foreach ($group->leaves as $leaf) {
-                $dimensionRef = $leaf->dimensionVariant !== null
-                    ? $leaf->dimension . '.' . $leaf->dimensionVariant
-                    : $leaf->dimension;
-                $leaves[] = $leaf->shopField . ':' . $dimensionRef;
+            $parts = [];
+            foreach ($group->items as $item) {
+                $parts[] = $item instanceof DslLeaf
+                    ? $this->_leafToString($item)
+                    : '(' . $this->toString($item) . ')';
             }
-            $groups[] = implode(' & ', $leaves);
+            $groups[] = implode(' & ', $parts);
         }
 
         return implode(' | ', $groups);
     }
 
-    /**
-     * AST as plain data for the settings page (builder re-render + validation
-     * response): {groups: [{leaves: [{shopField, dimension, dimensionVariant}]}]}.
-     */
-    public function toArray(DslOrExpr $ast): array
+    private function _leafToString(DslLeaf $leaf): string
     {
-        $groups = [];
-        foreach ($ast->groups as $group) {
-            $leaves = [];
-            foreach ($group->leaves as $leaf) {
-                $leaves[] = [
-                    'shopField'        => $leaf->shopField,
-                    'dimension'        => $leaf->dimension,
-                    'dimensionVariant' => $leaf->dimensionVariant,
-                ];
-            }
-            $groups[] = ['leaves' => $leaves];
-        }
-
-        return ['groups' => $groups];
+        return $leaf->shopField . ':' . ($leaf->dimensionVariant !== null
+            ? $leaf->dimension . '.' . $leaf->dimensionVariant
+            : $leaf->dimension);
     }
 }

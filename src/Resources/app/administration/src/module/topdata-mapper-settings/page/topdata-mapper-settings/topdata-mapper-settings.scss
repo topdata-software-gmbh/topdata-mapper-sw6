@@ -10,44 +10,6 @@
         margin-bottom: 24px;
     }
 
-    &__group {
-        border: 1px solid #d1d9e0;
-        border-radius: 4px;
-        padding: 12px;
-        margin-bottom: 12px;
-        position: relative;
-
-        > .sw-icon {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            cursor: pointer;
-            color: #de294c;
-        }
-    }
-
-    &__leaf {
-        margin-bottom: 8px;
-    }
-
-    &__remove {
-        cursor: pointer;
-        color: #de294c;
-    }
-
-    &__add-leaf,
-    &__add-group {
-        margin-top: 8px;
-    }
-
-    &__or-separator {
-        text-align: center;
-        color: #758ca3;
-        text-transform: uppercase;
-        font-size: 12px;
-        margin: 8px 0;
-    }
-
     &__dsl {
         margin-top: 24px;
 

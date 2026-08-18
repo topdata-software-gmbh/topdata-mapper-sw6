@@ -6,12 +6,12 @@ const { Component, Mixin } = Shopware;
 /**
  * Card B — matching strategy editor.
  *
- * The DSL string is the single source of truth; the visual builder and the
- * textarea are live-synced views over it ("last-edited side wins"). The PHP
- * parser is authoritative — textarea edits are re-validated debounced via
- * validate-strategy and the builder re-renders from the PHP-parsed AST.
+ * The DSL string is the single source of truth; the textarea is the only
+ * editor (preset chips fill it, the help modal documents the grammar). The
+ * PHP parser is authoritative — textarea edits are re-validated debounced via
+ * validate-strategy.
  *
- * 08/2026 created
+ * 08/2026 created, 08/2026 visual builder removed
  */
 Component.register('topdata-mapper-settings', {
     template,
@@ -31,13 +31,7 @@ Component.register('topdata-mapper-settings', {
         // ---- module init data ----
         presets: [],
         allowedPairs: {},
-        providers: [],
         credentialsConfigured: false,
-
-        // ---- builder model ----
-        groups: [],
-        propertyGroups: [],
-        customFieldNames: [],
 
         // ---- validation state ----
         validationValid: true,
@@ -56,14 +50,6 @@ Component.register('topdata-mapper-settings', {
     computed: {
         isDirty() {
             return this.dsl !== this.lastLoadedDsl;
-        },
-
-        /**
-         * Shop-field kinds for the leaf selects (property/customField are
-         * parametrized via the group/field variant select).
-         */
-        shopFieldKinds() {
-            return Object.keys(this.allowedPairs);
         },
 
         /**
@@ -98,38 +84,12 @@ Component.register('topdata-mapper-settings', {
                     this.lastLoadedDsl = response.data.dsl;
                     this.presets = response.data.presets;
                     this.allowedPairs = response.data.allowedPairs;
-                    this.providers = response.data.providers;
                     this.credentialsConfigured = response.data.credentialsConfigured;
-                    this.loadPropertyGroups();
-                    this.loadCustomFields();
                     return this.validateDsl();
                 })
                 .finally(() => {
                     this.isLoading = false;
                 });
-        },
-
-        loadPropertyGroups() {
-            const repository = Shopware.Service('repositoryFactory').create('property_group');
-            return repository.search(new Shopware.Data.Criteria()).then((result) => {
-                this.propertyGroups = result.map((group) => ({ value: group.name, label: group.name }));
-            });
-        },
-
-        loadCustomFields() {
-            const repository = Shopware.Service('repositoryFactory').create('custom_field_set');
-            const criteria = new Shopware.Data.Criteria();
-            criteria.addFilter(Shopware.Data.Criteria.equals('active', true));
-            return repository.search(criteria).then((result) => {
-                this.customFieldNames = [];
-                result.forEach((set) => {
-                    (set.customFields || []).forEach((field) => {
-                        if (field.name) {
-                            this.customFieldNames.push({ value: field.name, label: field.label || field.name });
-                        }
-                    });
-                });
-            });
         },
 
         // ------------------------------------------------------------- labels
@@ -139,19 +99,6 @@ Component.register('topdata-mapper-settings', {
 
         closeDslHelp() {
             this.showDslHelp = false;
-        },
-
-        shopFieldLabel(kind) {
-            const labels = {
-                'product.ean': this.$tc('TopdataMapperSW6.settings.shopField.product.ean'),
-                'product.manufacturer_number': this.$tc('TopdataMapperSW6.settings.shopField.product.manufacturer_number'),
-                'product.manufacturer': this.$tc('TopdataMapperSW6.settings.shopField.product.manufacturer'),
-                'product.product_number': this.$tc('TopdataMapperSW6.settings.shopField.product.product_number'),
-                'property': this.$tc('TopdataMapperSW6.settings.shopField.property'),
-                'customField': this.$tc('TopdataMapperSW6.settings.shopField.customField'),
-            };
-
-            return labels[kind] || kind;
         },
 
         dimensionLabel(dimension) {
@@ -164,136 +111,6 @@ Component.register('topdata-mapper-settings', {
             };
 
             return labels[dimension] || dimension;
-        },
-
-        // ------------------------------------------------------ builder model
-        /**
-         * Converts the PHP-parsed AST into the builder model. Leaf shape:
-         * {kind, dimension, group, provider} where group = property group name
-         * / custom field name and provider = provider id (articleNumbers scope).
-         */
-        builderFromAst(ast) {
-            return (ast.groups || []).map((group) => ({
-                leaves: (group.leaves || []).map((leaf) => {
-                    const kind = leaf.shopField.startsWith('property.')
-                        ? 'property'
-                        : leaf.shopField.startsWith('customField.')
-                            ? 'customField'
-                            : leaf.shopField;
-
-                    let groupValue = null;
-                    if (kind === 'property' || kind === 'customField') {
-                        groupValue = leaf.shopField.slice(leaf.shopField.indexOf('.') + 1);
-                    }
-
-                    return {
-                        kind,
-                        dimension: leaf.dimension,
-                        group: groupValue,
-                        provider: leaf.dimensionVariant,
-                    };
-                }),
-            }));
-        },
-
-        /**
-         * Serializes the builder model to a DSL string. Leaves whose required
-         * variant selects are not yet chosen are "incomplete" — they contribute
-         * nothing, so the builder can never generate invalid DSL.
-         */
-        dslFromBuilder() {
-            const orParts = [];
-            for (const group of this.groups) {
-                const andParts = [];
-                for (const leaf of group.leaves) {
-                    if (!this.leafComplete(leaf)) {
-                        continue;
-                    }
-                    let shopField = leaf.kind;
-                    if (leaf.group !== null) {
-                        shopField += '.' + leaf.group;
-                    }
-                    let dimension = leaf.dimension;
-                    if (leaf.dimension === 'articleNumbers' && leaf.provider !== null) {
-                        dimension += '.' + leaf.provider;
-                    }
-                    andParts.push(shopField + ':' + dimension);
-                }
-                if (andParts.length > 0) {
-                    orParts.push(andParts.join(' & '));
-                }
-            }
-
-            return orParts.join(' | ');
-        },
-
-        leafComplete(leaf) {
-            if ((leaf.kind === 'property' || leaf.kind === 'customField') && !leaf.group) {
-                return false;
-            }
-
-            return true;
-        },
-
-        dimensionOptions(kind) {
-            return this.allowedPairs[kind] || [];
-        },
-
-        // ------------------------------------------------------- builder edits
-        onLeafShopFieldChange(leaf) {
-            leaf.dimension = this.dimensionOptions(leaf.kind)[0] || null;
-            leaf.group = null;
-            leaf.provider = null;
-            this.applyBuilder();
-        },
-
-        onLeafDimensionChange(leaf) {
-            if (leaf.dimension !== 'articleNumbers') {
-                leaf.provider = null;
-            }
-            this.applyBuilder();
-        },
-
-        onLeafVariantChange() {
-            this.applyBuilder();
-        },
-
-        addLeaf(group) {
-            group.leaves.push({
-                kind: this.shopFieldKinds[0],
-                dimension: this.dimensionOptions(this.shopFieldKinds[0])[0] || null,
-                group: null,
-                provider: null,
-            });
-        },
-
-        removeLeaf(group, index) {
-            group.leaves.splice(index, 1);
-            this.applyBuilder();
-        },
-
-        addGroup() {
-            this.groups.push({
-                leaves: [{
-                    kind: this.shopFieldKinds[0],
-                    dimension: this.dimensionOptions(this.shopFieldKinds[0])[0] || null,
-                    group: null,
-                    provider: null,
-                }],
-            });
-            this.applyBuilder();
-        },
-
-        removeGroup(index) {
-            this.groups.splice(index, 1);
-            this.applyBuilder();
-        },
-
-        /**
-         * Builder edit → replace the DSL string (fully replaces the textarea).
-         */
-        applyBuilder() {
-            this.dsl = this.dslFromBuilder();
         },
 
         // ------------------------------------------------------------ presets
@@ -336,9 +153,6 @@ Component.register('topdata-mapper-settings', {
                 .then((response) => {
                     this.validationValid = response.data.valid;
                     this.validationError = response.data.error;
-                    if (response.data.valid) {
-                        this.groups = this.builderFromAst(response.data.ast);
-                    }
                 })
                 .catch(() => {
                     this.validationValid = false;

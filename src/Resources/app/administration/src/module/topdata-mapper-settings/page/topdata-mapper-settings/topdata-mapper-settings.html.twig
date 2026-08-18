@@ -72,117 +72,6 @@
                             </div>
                         {% endblock %}
 
-                        {% block topdata_mapper_settings_builder %}
-                            <div
-                                v-for="(group, groupIndex) in groups"
-                                :key="groupIndex"
-                                class="topdata-mapper-settings__group"
-                            >
-                                <sw-container
-                                    v-for="(leaf, leafIndex) in group.leaves"
-                                    :key="leafIndex"
-                                    columns="minmax(220px, 1fr) 200px 220px 40px"
-                                    align="center"
-                                    gap="0 12px"
-                                    class="topdata-mapper-settings__leaf"
-                                >
-                                    <sw-select-field
-                                        v-model="leaf.kind"
-                                        :options="shopFieldKinds.map(kind => ({ value: kind, label: shopFieldLabel(kind) }))"
-                                        @change="onLeafShopFieldChange(leaf)"
-                                    >
-                                        <template #label>
-                                            {{ $tc('TopdataMapperSW6.settings.builder.shopField') }}
-                                        </template>
-                                    </sw-select-field>
-
-                                    <sw-select-field
-                                        v-model="leaf.dimension"
-                                        :options="dimensionOptions(leaf.kind).map(dimension => ({ value: dimension, label: dimensionLabel(dimension) }))"
-                                        :disabled="(leaf.kind === 'property' || leaf.kind === 'customField') && !leaf.group"
-                                        @change="onLeafDimensionChange(leaf)"
-                                    >
-                                        <template #label>
-                                            {{ $tc('TopdataMapperSW6.settings.builder.dimension') }}
-                                        </template>
-                                    </sw-select-field>
-
-                                    <!-- contextual variant select -->
-                                    <sw-select-field
-                                        v-if="leaf.dimension === 'articleNumbers'"
-                                        v-model="leaf.provider"
-                                        :options="[{ value: null, label: $tc('TopdataMapperSW6.settings.builder.allProviders') }].concat(providers.map(provider => ({ value: String(provider.id), label: provider.name })))"
-                                        @change="onLeafVariantChange"
-                                    >
-                                        <template #label>
-                                            {{ $tc('TopdataMapperSW6.settings.builder.provider') }}
-                                        </template>
-                                    </sw-select-field>
-
-                                    <sw-select-field
-                                        v-else-if="leaf.kind === 'property'"
-                                        v-model="leaf.group"
-                                        :options="propertyGroups"
-                                        @change="onLeafVariantChange"
-                                    >
-                                        <template #label>
-                                            {{ $tc('TopdataMapperSW6.settings.builder.propertyGroup') }}
-                                        </template>
-                                    </sw-select-field>
-
-                                    <sw-select-field
-                                        v-else-if="leaf.kind === 'customField'"
-                                        v-model="leaf.group"
-                                        :options="customFieldNames"
-                                        @change="onLeafVariantChange"
-                                    >
-                                        <template #label>
-                                            {{ $tc('TopdataMapperSW6.settings.builder.customField') }}
-                                        </template>
-                                    </sw-select-field>
-
-                                    <span v-else></span>
-
-                                    <sw-icon
-                                        name="regular-times-s"
-                                        size="16"
-                                        class="topdata-mapper-settings__remove"
-                                        @click="removeLeaf(group, leafIndex)"
-                                    />
-                                </sw-container>
-
-                                <sw-button
-                                    size="small"
-                                    variant="ghost"
-                                    class="topdata-mapper-settings__add-leaf"
-                                    @click="addLeaf(group)"
-                                >
-                                    {{ $tc('TopdataMapperSW6.settings.builder.addLeaf') }}
-                                </sw-button>
-
-                                <sw-icon
-                                    v-if="groups.length > 1"
-                                    name="regular-times-s"
-                                    size="16"
-                                    class="topdata-mapper-settings__remove"
-                                    @click="removeGroup(groupIndex)"
-                                />
-                            </div>
-
-                            <div class="topdata-mapper-settings__or-separator">
-                                {{ $tc('TopdataMapperSW6.settings.builder.orSeparator') }}
-                            </div>
-
-                            <sw-button
-                                size="small"
-                                variant="ghost"
-                                class="topdata-mapper-settings__add-group"
-                                @click="addGroup"
-                            >
-                                {{ $tc('TopdataMapperSW6.settings.builder.addGroup') }}
-                            </sw-button>
-                        {% endblock %}
-
                         {% block topdata_mapper_settings_dsl %}
                             <div class="topdata-mapper-settings__dsl">
                                 <sw-textarea-field
@@ -299,6 +188,9 @@
                         <li>
                             <code>|</code> — {{ $tc('TopdataMapperSW6.settings.dslHelp.grammar.or') }}
                         </li>
+                        <li>
+                            <code>( )</code> — {{ $tc('TopdataMapperSW6.settings.dslHelp.grammar.parens') }}
+                        </li>
                     </ul>
 
                     <h3>{{ $tc('TopdataMapperSW6.settings.dslHelp.shopFields.title') }}</h3>
@@ -348,6 +240,12 @@
                                 <code>product.product_number:articleNumbers.4123</code>
                             </p>
                             <p>{{ $tc('TopdataMapperSW6.settings.dslHelp.examples.three') }}</p>
+                        </li>
+                        <li>
+                            <p class="topdata-mapper-settings__dsl-help-code">
+                                <code>(product.ean:ean | product.product_number:articleNumbers.4123) &amp; product.manufacturer:topdataBrandIds</code>
+                            </p>
+                            <p>{{ $tc('TopdataMapperSW6.settings.dslHelp.examples.four') }}</p>
                         </li>
                     </ul>
 

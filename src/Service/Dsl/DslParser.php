@@ -6,14 +6,15 @@ namespace Topdata\TopdataMapperSW6\Service\Dsl;
 
 /**
  * Recursive-descent parser for the matching DSL (the single authoritative
- * parser — the settings page re-renders its visual builder from the AST this
- * parser produces, and the import fails loudly on invalid stored strategies).
+ * parser — the settings page validates its DSL textarea against it, and the
+ * import fails loudly on invalid stored strategies).
  *
- * Grammar:
+ * Grammar (operator precedence: `( )` > `&` > `|`):
  * ```
  * strategy := orExpr
  * orExpr   := andExpr ('|' andExpr)*     // | = union of matched product sets
- * andExpr  := leaf ('&' leaf)*           // & = intersection
+ * andExpr  := primary ('&' primary)*     // & = intersection
+ * primary  := leaf | '(' orExpr ')'      // parens override precedence
  * leaf     := shopField ':' dimensionRef
  * ```
  *
@@ -36,57 +37,110 @@ class DslParser
             throw new DslParseException('The DSL string is empty.');
         }
 
+        [$ast, $end] = $this->_parseOrExpr($dsl, 0);
+        $rest = trim(substr($dsl, $end));
+        if ($rest !== '') {
+            if (str_starts_with($rest, ')')) {
+                throw new DslParseException("Unexpected ')' — no matching '(' before it.", position: $end);
+            }
+
+            throw new DslParseException("Unexpected trailing input '{$rest}'.", position: $end);
+        }
+
+        return $ast;
+    }
+
+    /**
+     * @return array{DslOrExpr, int} [expr, end-cursor]
+     */
+    private function _parseOrExpr(string $dsl, int $offset): array
+    {
         $groups = [];
-        foreach ($this->_split($dsl, '|') as $orIndex => $andPart) {
-            $orOffset = $this->_findOperatorOffset($dsl, '|', $orIndex);
-
-            $leaves = [];
-            foreach ($this->_split($andPart, '&') as $andIndex => $leafPart) {
-                $leafOffset = $orOffset + $this->_findOperatorOffset($andPart, '&', $andIndex);
-                $leaves[]   = $this->_parseLeaf(trim($leafPart), $leafOffset);
-            }
-            if (count($leaves) === 0) {
-                throw new DslParseException('Empty AND group (two `|` in a row).', position: $orOffset);
-            }
-            $groups[] = new DslAndExpr($leaves);
-        }
-
-        return new DslOrExpr($groups);
-    }
-
-    /**
-     * @return string[] non-empty trimmed parts (empty parts are skipped — the
-     *                  caller detects the "missing operand" case via the count)
-     */
-    private function _split(string $s, string $operator): array
-    {
-        $parts = [];
-        foreach (explode($operator, $s) as $part) {
-            $part = trim($part);
-            if ($part !== '') {
-                $parts[] = $part;
-            }
-        }
-
-        return $parts;
-    }
-
-    /**
-     * Approximates the 0-based offset of the operand at $index within $s,
-     * counting the operator separators before it (used for error positions).
-     */
-    private function _findOperatorOffset(string $s, string $operator, int $index): int
-    {
-        $offset = 0;
-        for ($i = 0; $i < $index; $i++) {
-            $pos = strpos($s, $operator, $offset);
-            if ($pos === false) {
+        do {
+            [$group, $offset] = $this->_parseAndExpr($dsl, $offset);
+            $groups[] = $group;
+            [$offset] = $this->_skipWhitespace($dsl, $offset);
+            if (($dsl[$offset] ?? '') !== '|') {
                 break;
             }
-            $offset = $pos + 1;
+            $offset++; // consume '|'
+        } while (true);
+
+        return [new DslOrExpr($groups), $offset];
+    }
+
+    /**
+     * @return array{DslAndExpr, int} [expr, end-cursor]
+     */
+    private function _parseAndExpr(string $dsl, int $offset): array
+    {
+        $items = [];
+        do {
+            [$item, $offset] = $this->_parsePrimary($dsl, $offset);
+            $items[] = $item;
+            [$offset] = $this->_skipWhitespace($dsl, $offset);
+            if (($dsl[$offset] ?? '') !== '&') {
+                break;
+            }
+            $offset++; // consume '&'
+        } while (true);
+
+        return [new DslAndExpr($items), $offset];
+    }
+
+    /**
+     * @return array{DslLeaf|DslOrExpr, int}
+     */
+    private function _parsePrimary(string $dsl, int $offset): array
+    {
+        [$offset] = $this->_skipWhitespace($dsl, $offset);
+        $char = $dsl[$offset] ?? '';
+
+        if ($char === '(') {
+            [$inner, $offset] = $this->_parseOrExpr($dsl, $offset + 1);
+            [$offset] = $this->_skipWhitespace($dsl, $offset);
+            if (($dsl[$offset] ?? '') !== ')') {
+                throw new DslParseException("Missing ')' — unclosed group.", position: $offset);
+            }
+
+            return [$inner, $offset + 1];
+        }
+        if ($char === ')') {
+            throw new DslParseException("Unexpected ')' — no matching '(' before it.", position: $offset);
         }
 
-        return $offset;
+        [$leafTextRaw, $offset] = $this->_scanLeafText($dsl, $offset);
+        $leafText = trim($leafTextRaw);
+        if ($leafText === '') {
+            throw new DslParseException("Expected a leaf or '(' group, found nothing.", position: $offset - strlen($leafTextRaw));
+        }
+
+        return [$this->_parseLeaf($leafText, $offset - strlen($leafTextRaw)), $offset];
+    }
+
+    /**
+     * @return array{string, int} [raw leaf text (untrimmed), end-cursor]
+     */
+    private function _scanLeafText(string $dsl, int $offset): array
+    {
+        $end = $offset;
+        while (isset($dsl[$end]) && !in_array($dsl[$end], ['|', '&', '(', ')'], true)) {
+            $end++;
+        }
+
+        return [substr($dsl, $offset, $end - $offset), $end];
+    }
+
+    /**
+     * @return array{int} [offset after whitespace]
+     */
+    private function _skipWhitespace(string $dsl, int $offset): array
+    {
+        while (isset($dsl[$offset]) && ctype_space($dsl[$offset])) {
+            $offset++;
+        }
+
+        return [$offset];
     }
 
     /**

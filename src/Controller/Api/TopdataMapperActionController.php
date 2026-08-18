@@ -51,8 +51,7 @@ class TopdataMapperActionController extends AbstractController
 
     /**
      * Module init for the settings page: current DSL + presets + pairing
-     * matrix + credential status + the user's reserved providers (one round
-     * trip; provider list is skipped when the webservice is unreachable).
+     * matrix + credential status (one round trip).
      */
     #[Route(path: '/api/_action/topdata-mapper/strategy', name: 'api.action.topdata-mapper.strategy.get', methods: ['GET'])]
     public function getStrategyAction(Context $context): JsonResponse
@@ -64,7 +63,6 @@ class TopdataMapperActionController extends AbstractController
             'presets'               => $this->strategyService->getPresets(),
             'allowedPairs'          => DslPairingMatrix::toArray(),
             'credentialsConfigured' => $this->mapperClient->hasValidConfig(),
-            'providers'             => $this->_fetchProviders(),
         ]);
     }
 
@@ -93,7 +91,7 @@ class TopdataMapperActionController extends AbstractController
     }
 
     /**
-     * Debounced live validation while typing: {valid, ast, error}. Grammar +
+     * Debounced live validation while typing: {valid, error}. Grammar +
      * pairing matrix only (no provider check — the provider scope is validated
      * on save and re-validated by the import backstop).
      */
@@ -104,11 +102,11 @@ class TopdataMapperActionController extends AbstractController
 
         $dsl = (string)($request->request->all()['dsl'] ?? '');
         try {
-            $ast = $this->dslParser->parse($dsl);
+            $this->dslParser->parse($dsl);
 
-            return new JsonResponse(['valid' => true, 'ast' => $this->dslSerializer->toArray($ast), 'error' => null]);
+            return new JsonResponse(['valid' => true, 'error' => null]);
         } catch (DslParseException $e) {
-            return new JsonResponse(['valid' => false, 'ast' => null, 'error' => $e->toArray()]);
+            return new JsonResponse(['valid' => false, 'error' => $e->toArray()]);
         }
     }
 
@@ -244,9 +242,9 @@ class TopdataMapperActionController extends AbstractController
     }
 
     /**
-     * Reserved providers of the webservice user (for the articleNumbers.<id>
-     * provider dropdown). Best effort: unreachable/not configured → [] so the
-     * settings page still loads.
+     * Reserved providers of the webservice user (provider-id existence check
+     * for articleNumbers.<provider> leaves on save). Best effort:
+     * unreachable/not configured → [] so the check degrades to a no-op.
      *
      * @return list<array{id: int, name: string}>
      */
@@ -277,7 +275,8 @@ class TopdataMapperActionController extends AbstractController
      * Checks that every articleNumbers.<provider> reference in the strategy
      * exists among the user's reserved providers. Best effort: when the
      * webservice is not configured/unreachable the check is skipped (the
-     * import backstop fails loudly on real credential problems).
+     * import backstop fails loudly on real credential problems). Recursive —
+     * provider leaves may sit inside `( ... )` groups.
      */
     private function _assertProvidersExist(DslOrExpr $ast, string $dsl): void
     {
@@ -290,7 +289,13 @@ class TopdataMapperActionController extends AbstractController
         }
 
         foreach ($ast->groups as $group) {
-            foreach ($group->leaves as $leaf) {
+            foreach ($group->items as $item) {
+                if ($item instanceof DslOrExpr) {
+                    $this->_assertProvidersExist($item, $dsl);
+                    continue;
+                }
+
+                $leaf = $item;
                 if ($leaf->dimensionVariant === null) {
                     continue;
                 }
