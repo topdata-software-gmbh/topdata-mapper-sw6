@@ -3,7 +3,8 @@ filename: "_ai/backlog/active/260816_1230__IMPLEMENTATION_PLAN__remove-visual-ds
 title: "Remove the visual DSL builder from the settings page — DSL string + preset chips are the only editor; DSL grammar gains parentheses for explicit precedence"
 createdAt: 2026-08-16 12:30
 updatedAt: 2026-08-18
-status: draft
+status: completed
+completedAt: 2026-08-18 10:12
 priority: low
 tags: [admin, dsl, settings, refactor, ui, grammar]
 estimatedComplexity: medium
@@ -1044,6 +1045,7 @@ updatedAt: 2026-08-16 HH:mm
 planFile: "_ai/backlog/active/260816_1230__IMPLEMENTATION_PLAN__remove-visual-dsl-builder.md"
 project: "topdata-mapper-sw6"
 status: completed
+completedAt: 2026-08-18 10:12
 filesCreated: 1
 filesModified: 15
 filesDeleted: 0
