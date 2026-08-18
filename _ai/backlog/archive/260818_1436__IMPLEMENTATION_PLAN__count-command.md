@@ -3,7 +3,8 @@ filename: "_ai/backlog/active/260818_1436__IMPLEMENTATION_PLAN__count-command.md
 title: "topdata:mapper:count — debug command counting shop products with EAN / MPN / article number / custom fields"
 createdAt: 2026-08-18 14:36
 updatedAt: 2026-08-18 14:36
-status: draft
+status: completed
+completedAt: 2026-08-18 14:43
 priority: medium
 tags: [command, cli, debugging, count, dbal]
 estimatedComplexity: simple
@@ -518,6 +519,7 @@ updatedAt: YYYY-MM-DD HH:mm
 planFile: "_ai/backlog/active/260818_1436__IMPLEMENTATION_PLAN__count-command.md"
 project: "topdata-mapper-sw6"
 status: completed
+completedAt: 2026-08-18 14:43
 filesCreated: 2
 filesModified: 3
 filesDeleted: 0

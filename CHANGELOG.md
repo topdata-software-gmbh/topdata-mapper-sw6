@@ -24,6 +24,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and this 
   flat strategies (default + presets) are unaffected.
 
 ### Added
+- **`topdata:mapper:count` debug command** — counts live Shopware products
+  with EAN / MPN / article-number values (plus "any identifier" and totals)
+  and, with `--also-customfields`, one row per custom-field name;
+  `--parents-only` excludes variants. DB-side only, no API call. Counts
+  exclude junk placeholder values (`-`, `n/a`, no-digit EANs) by default;
+  `--show-placeholders` adds the excluded products as yellow sub-rows.
 - **Admin: "Katalog > Topdata Mapper" navigation group** — new group under
   the catalog containing the existing conflicts page (moved out of Products)
   and a new read-only **Mappings** browser (tabs for product and brand

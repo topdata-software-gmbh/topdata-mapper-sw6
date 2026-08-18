@@ -48,6 +48,20 @@ When the strategy references `topdataBrandIds`, the brand build runs first
 Credentials (API base URL + API key `sk-...`) are configured in the plugin
 settings or prompted on the CLI.
 
+### Debug: count identifiers
+
+```bash
+bin/console topdata:mapper:count                     # products with EAN / MPN / article number (incl. variants)
+bin/console topdata:mapper:count --also-customfields # + per custom-field counts
+bin/console topdata:mapper:count --parents-only      # main products only
+bin/console topdata:mapper:count --show-placeholders # + placeholder-only values (-, n/a, no-digit EAN), excluded above
+```
+
+DB-side only (no API call) — the first stop when an import matches nothing.
+Counts exclude junk placeholder values by default (an EAN only counts when it
+contains a digit, `-` / `n/a` MPNs and article numbers don't count);
+`--show-placeholders` adds the excluded products as yellow sub-rows.
+
 ## Conflicts
 
 Products matching >1 Topdata article are conflicts: `tdmp_product` keeps only

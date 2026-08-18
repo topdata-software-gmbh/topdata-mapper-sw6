@@ -17,6 +17,7 @@ Run from the Shopware root, **not** the plugin dir (`bin/console` lives at `/top
 | `bin/console topdata:mapper:import` | Rebuild product + brand mappings (full table replace) |
 | `bin/console topdata:mapper:import --mapping=product` | Only `tdmp_product` |
 | `bin/console topdata:mapper:import --mapping=brand` | Only `tdmp_brand` |
+| `bin/console topdata:mapper:count` | Count shop products with EAN/MPN/article number (pretty table, DB-only debug helper; placeholders `-`/`n/a` excluded by default, `--show-placeholders` adds them as sub-rows; `--also-customfields` per custom field, `--parents-only` excludes variants) |
 
 Credentials come from plugin config (`apiBaseUrl`, `apiKey` `sk-...`, key `TopdataMapperSW6.config`) or are prompted on the CLI.
 

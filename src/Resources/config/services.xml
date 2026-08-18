@@ -9,6 +9,7 @@
         <service id="Topdata\TopdataMapperSW6\Service\Db\TdmpBrandService" autowire="true"/>
         <service id="Topdata\TopdataMapperSW6\Service\Db\TdmpConflictResolutionService" autowire="true"/>
         <service id="Topdata\TopdataMapperSW6\Service\Db\TdmpMappingBrowseService" autowire="true"/>
+        <service id="Topdata\TopdataMapperSW6\Service\Db\TdmpProductCountService" autowire="true"/>
         <service id="Topdata\TopdataMapperSW6\Service\Dsl\DslParser" autowire="true"/>
         <service id="Topdata\TopdataMapperSW6\Service\Dsl\DslSerializer" autowire="true"/>
         <service id="Topdata\TopdataMapperSW6\Service\Dsl\DslPairingMatrix" autowire="true"/>
@@ -25,6 +26,9 @@
         </service>
 
         <service id="Topdata\TopdataMapperSW6\Command\Command_TdmpImport" autowire="true">
+            <tag name="console.command"/>
+        </service>
+        <service id="Topdata\TopdataMapperSW6\Command\Command_TdmpCount" autowire="true">
             <tag name="console.command"/>
         </service>
     </services>
