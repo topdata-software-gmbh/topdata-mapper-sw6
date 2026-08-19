@@ -16,6 +16,7 @@ use Topdata\TopdataFoundationSW6\Helper\CliStyle;
 use Topdata\TopdataFoundationSW6\Service\CliApiCredentialPrompter;
 use Topdata\TopdataFoundationSW6\Util\CliLogger;
 use Topdata\TopdataMapperSW6\Service\Dsl\DslOrExpr;
+use Topdata\TopdataMapperSW6\Service\Dsl\DslSerializer;
 use Topdata\TopdataMapperSW6\Service\DslStrategyService;
 use Topdata\TopdataMapperSW6\Service\MappingBuildStats;
 use Topdata\TopdataMapperSW6\Service\ProductMappingMatcher_Dsl;
@@ -36,6 +37,7 @@ class Command_TdmpImport extends AbstractTopdataCommand
         private readonly TopdataMapperWebserviceV2Client $mapperClient,
         private readonly CliApiCredentialPrompter       $credentialPrompter,
         private readonly DslStrategyService              $strategyService,
+        private readonly DslSerializer                   $dslSerializer,
     ) {
         parent::__construct();
     }
@@ -108,7 +110,8 @@ class Command_TdmpImport extends AbstractTopdataCommand
 
     /**
      * Prints the configured matching strategy as a flat table of its leaves
-     * (parens, `&` and `|` are implied by the grammar and not rendered).
+     * (parens, `&` and `|` are implied by the grammar and not rendered) and
+     * the DSL definition below it.
      */
     private function _printStrategyTable(DslOrExpr $strategy): void
     {
@@ -133,6 +136,7 @@ class Command_TdmpImport extends AbstractTopdataCommand
         $tbl->setHeaderTitle('Matching strategy');
         $tbl->render();
 
+        $this->cliStyle->writeln('  DSL: <fg=cyan>' . $this->dslSerializer->toString($strategy) . '</>');
         $this->cliStyle->newLine();
     }
 

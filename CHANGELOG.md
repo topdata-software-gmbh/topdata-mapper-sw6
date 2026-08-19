@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and this 
 
 ## [Unreleased]
 
+### Added
+- **`topdata:mapper:import` prints the DSL definition** — the canonical
+  strategy string is now printed below the matching-strategy table, so the
+  run shows both the flat leaf overview and the exact DSL configured.
+
 ### Changed
 
 - `tdmp_brand`: `brand_id` renamed to `product_manufacturer_id`, new
