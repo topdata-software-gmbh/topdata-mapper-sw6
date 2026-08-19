@@ -188,6 +188,7 @@ class TdmpMappingBuildService
             $apiRowsCount,
             $matched,
             $unmatched,
+            $this->_countShopProducts(),
             microtime(true) - $t0,
             count($conflicts)
         );
@@ -242,7 +243,27 @@ class TdmpMappingBuildService
         $matched = $this->tdmpBrandService->insertMany($rows);
         CliLogger::info("Built tdmp_brand: {$matched} rows across {$page} page(s), {$unmatched} unmatched.");
 
-        return new MappingBuildStats('brand', $page, $apiRowsCount, $matched, $unmatched, microtime(true) - $t0);
+        return new MappingBuildStats('brand', $page, $apiRowsCount, $matched, $unmatched, $this->_countShopBrands(), microtime(true) - $t0);
+    }
+
+    /**
+     * Counts live-version shop products (variants included, mirroring the matcher).
+     */
+    private function _countShopProducts(): int
+    {
+        return (int)$this->connection->fetchOne(
+            'SELECT COUNT(*) FROM product WHERE version_id = 0x' . TdmpProductService::LIVE_VERSION_HEX
+        );
+    }
+
+    /**
+     * Counts live-version shop manufacturers.
+     */
+    private function _countShopBrands(): int
+    {
+        return (int)$this->connection->fetchOne(
+            'SELECT COUNT(*) FROM product_manufacturer WHERE version_id = 0x' . TdmpBrandService::LIVE_VERSION_HEX
+        );
     }
 
     /**

@@ -17,6 +17,7 @@ class MappingBuildStats
         public readonly int    $apiRows,
         public readonly int    $matched,
         public readonly int    $unmatched,
+        public readonly int    $sw6Total,
         public readonly float  $duration,
         public readonly int    $conflicts = 0,
     ) {

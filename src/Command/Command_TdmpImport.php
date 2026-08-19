@@ -155,6 +155,8 @@ class Command_TdmpImport extends AbstractTopdataCommand
                 $this->_cell(number_format($stat->apiRows)),
                 $this->_cell(number_format($stat->matched), $stat->matched > 0 ? ['fg' => 'green', 'options' => 'bold'] : null),
                 $this->_cell(number_format($stat->unmatched), $stat->unmatched > 0 ? ['fg' => 'yellow', 'options' => 'bold'] : null),
+                $this->_cell(number_format($stat->sw6Total)),
+                $this->_cell(number_format($stat->sw6Total - $stat->matched), $stat->sw6Total - $stat->matched > 0 ? ['fg' => 'yellow', 'options' => 'bold'] : null),
                 $this->_cell(number_format($stat->conflicts), $stat->conflicts > 0 ? ['fg' => 'yellow', 'options' => 'bold'] : null),
                 $this->_cell(sprintf('%.1f s', $stat->duration)),
             ];
@@ -169,12 +171,14 @@ class Command_TdmpImport extends AbstractTopdataCommand
             $this->_cell(number_format($totals['apiRows']), ['options' => 'bold']),
             $this->_cell(number_format($totals['matched']), ['options' => 'bold']),
             $this->_cell(number_format($totals['unmatched']), ['options' => 'bold']),
+            $this->_cell(number_format($totals['sw6Total']), ['options' => 'bold']),
+            $this->_cell(number_format($totals['sw6Total'] - $totals['matched']), ['options' => 'bold']),
             $this->_cell(number_format($totals['conflicts']), ['options' => 'bold']),
             $this->_cell(sprintf('%.1f s', $totals['duration']), ['options' => 'bold']),
         ];
 
         $headers = [];
-        foreach (['Mapping', 'Pages', 'API rows', 'Matched', 'Unmatched', 'Conflicts', 'Duration'] as $header) {
+        foreach (['Mapping', 'Pages', 'API rows', 'Matched', 'Unmatched TD', 'SW6 Total', 'SW6 unmatched', 'Conflicts', 'Duration'] as $header) {
             $headers[] = $this->_cell($header, ['fg' => 'cyan', 'options' => 'bold']);
         }
 
@@ -205,7 +209,7 @@ class Command_TdmpImport extends AbstractTopdataCommand
 
     /**
      * @param MappingBuildStats[] $stats
-     * @return array{pages: int, apiRows: int, matched: int, unmatched: int, conflicts: int, duration: float}
+     * @return array{pages: int, apiRows: int, matched: int, unmatched: int, sw6Total: int, conflicts: int, duration: float}
      */
     private function _sumStats(array $stats): array
     {
@@ -214,6 +218,7 @@ class Command_TdmpImport extends AbstractTopdataCommand
             'apiRows'   => array_sum(array_map(fn(MappingBuildStats $s) => $s->apiRows, $stats)),
             'matched'   => array_sum(array_map(fn(MappingBuildStats $s) => $s->matched, $stats)),
             'unmatched' => array_sum(array_map(fn(MappingBuildStats $s) => $s->unmatched, $stats)),
+            'sw6Total'  => array_sum(array_map(fn(MappingBuildStats $s) => $s->sw6Total, $stats)),
             'conflicts' => array_sum(array_map(fn(MappingBuildStats $s) => $s->conflicts, $stats)),
             'duration'  => array_sum(array_map(fn(MappingBuildStats $s) => $s->duration, $stats)),
         ];
