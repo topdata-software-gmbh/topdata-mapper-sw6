@@ -33,13 +33,13 @@ class TdmpMappingBuildService
     public const int PAGE_SIZE = 1000;
 
     public function __construct(
-        private readonly TdmpProductService               $tdmpProductService,
-        private readonly TdmpBrandService                 $tdmpBrandService,
-        private readonly TdmpConflictResolutionService    $tdmpConflictResolutionService,
-        private readonly TopdataMapperWebserviceV2Client   $mapperClient,
-        private readonly ProductMappingMatcherInterface    $productMatcher,
-        private readonly DslStrategyService                $strategyService,
-        private readonly Connection                        $connection,
+        private readonly TdmpProductService $tdmpProductService,
+        private readonly TdmpBrandService $tdmpBrandService,
+        private readonly TdmpConflictResolutionService $tdmpConflictResolutionService,
+        private readonly TopdataMapperWebserviceV2Client $mapperClient,
+        private readonly ProductMappingMatcherInterface $productMatcher,
+        private readonly DslStrategyService $strategyService,
+        private readonly Connection $connection,
     ) {
     }
 
@@ -65,8 +65,9 @@ class TdmpMappingBuildService
         }
 
         // ---- per product: candidate topdata ids (deduped) + preview data for the conflict radios
-        $candidates = [];
-        $previews   = [];
+        $candidates   = [];
+        $previews     = [];
+        $synonymIndex = [];
 
         $cursor = null;
         $page   = 0;
@@ -81,13 +82,13 @@ class TdmpMappingBuildService
             $apiRowsCount += count($apiRows);
 
             foreach ($apiRows as $apiRow) {
-                $topdataId = (int)$apiRow->topdataProductId;
+                $topdataId = (int) $apiRow->topdataProductId;
                 $matches   = $this->productMatcher->matchRow($apiRow);
                 if (count($matches) === 0) {
                     $unmatched++;
                 }
                 foreach ($matches as $product) {
-                    $productId                       = $product['product_id'];
+                    $productId                          = $product['product_id'];
                     $candidates[$productId][$topdataId] = true;
                     if (!isset($previews[$productId][$topdataId])) {
                         $previews[$productId][$topdataId] = [
@@ -96,6 +97,9 @@ class TdmpMappingBuildService
                             'mpn' => array_map('strval', $apiRow->mpn ?? []),
                         ];
                     }
+                }
+                foreach ($apiRow->synonymIds ?? [] as $synonymId) {
+                    $synonymIndex[$topdataId][(int) $synonymId] = true;
                 }
             }
 
@@ -106,6 +110,36 @@ class TdmpMappingBuildService
             if ($cursor === null) {
                 throw new \RuntimeException('Webservice reported has_more without next_cursor');
             }
+        }
+
+        // ---- collapse synonym-equivalent candidates: the webservice emits a
+        //      row for every reserved product that has synonyms (bidirectional
+        //      links), so a shop product that matches both partners of a
+        //      synonym pair (e.g. a toner that fits 51034 and its synonym 8100)
+        //      would otherwise register a false conflict. Merge connected
+        //      candidates into one representative per group; the API does not
+        //      expose which partner is the canonical device product, so the
+        //      representative is the lowest topdataProductId (deterministic
+        //      and stable across imports; the deferred structured
+        //      version_products_id columns will allow true canonical selection).
+        $mergedCandidates = 0;
+        foreach ($candidates as $productId => $topdataIds) {
+            $collapsed = $this->_collapseSynonymCandidates($topdataIds, $synonymIndex);
+            if (count($collapsed) < count($topdataIds)) {
+                $mergedCandidates += count($topdataIds) - count($collapsed);
+                CliLogger::debug(sprintf(
+                    'product %s: merged %d synonym-equivalent candidate(s): %s → %s',
+                    $productId,
+                    count($topdataIds) - count($collapsed),
+                    implode(',', array_keys($topdataIds)),
+                    implode(',', array_keys($collapsed))
+                ));
+            }
+            $candidates[$productId] = $collapsed;
+            $previews[$productId]   = array_intersect_key($previews[$productId], $collapsed);
+        }
+        if ($mergedCandidates > 0) {
+            CliLogger::info("Merged {$mergedCandidates} synonym-equivalent candidate(s) across " . count($candidates) . ' product(s).');
         }
 
         // ---- split into conflicts (≥2 candidates) and plain mappings, sync
@@ -185,14 +219,14 @@ class TdmpMappingBuildService
             $apiRowsCount += count($apiRows);
 
             foreach ($apiRows as $apiRow) {
-                $brandId = $shopBrandMap[UtilIdentifierNormalizer::normalizeLabel((string)$apiRow->val)] ?? null;
+                $brandId = $shopBrandMap[UtilIdentifierNormalizer::normalizeLabel((string) $apiRow->val)] ?? null;
                 if ($brandId === null) {
                     $unmatched++;
                     continue;
                 }
                 $rows[] = [
                     'product_manufacturer_id' => $brandId,
-                    'topdata_brand_id'        => (int)$apiRow->id,
+                    'topdata_brand_id'        => (int) $apiRow->id,
                     'created_at'              => $now,
                     'updated_at'              => $now,
                 ];
@@ -209,6 +243,58 @@ class TdmpMappingBuildService
         CliLogger::info("Built tdmp_brand: {$matched} rows across {$page} page(s), {$unmatched} unmatched.");
 
         return new MappingBuildStats('brand', $page, $apiRowsCount, $matched, $unmatched, microtime(true) - $t0);
+    }
+
+    /**
+     * Merges candidates that are connected via the synonym index into a single
+     * representative per group (union-find over the candidate ids). A group's
+     * representative is its lowest topdataProductId.
+     *
+     * @param array<int, true> $candidateIds topdata product ids of one shop product (keys)
+     * @param array<int, array<int, true>> $synonymIndex topdata product id → synonym ids (keys)
+     * @return array<int, true> collapsed candidate ids (keys)
+     */
+    private function _collapseSynonymCandidates(array $candidateIds, array $synonymIndex): array
+    {
+        $parent = [];
+        $find   = function (int $x) use (&$parent, &$find): int {
+            $parent[$x] ??= $x;
+            while ($parent[$x] !== $x) {
+                $parent[$x] = $parent[$parent[$x]];
+                $x          = $parent[$x];
+            }
+
+            return $x;
+        };
+        $union = function (int $a, int $b) use (&$parent, &$find): void {
+            $rootA = $find($a);
+            $rootB = $find($b);
+            if ($rootA !== $rootB) {
+                $parent[$rootA] = $rootB;
+            }
+        };
+
+        foreach ($candidateIds as $x => $_) {
+            foreach ($synonymIndex[$x] ?? [] as $y => $_) {
+                if (isset($candidateIds[$y])) {
+                    $union($x, $y);
+                }
+            }
+        }
+
+        $representatives = [];
+        foreach ($candidateIds as $x => $_) {
+            $root                   = $find($x);
+            $representatives[$root] = $representatives[$root] ?? $x;
+            $representatives[$root] = min($representatives[$root], $x);
+        }
+
+        $collapsed = [];
+        foreach ($representatives as $representative) {
+            $collapsed[$representative] = true;
+        }
+
+        return $collapsed;
     }
 
     /**
@@ -229,7 +315,7 @@ class TdmpMappingBuildService
 
         $map = [];
         foreach ($rows as $row) {
-            $map[UtilIdentifierNormalizer::normalizeLabel((string)$row['name'])] = $row['product_manufacturer_id'];
+            $map[UtilIdentifierNormalizer::normalizeLabel((string) $row['name'])] = $row['product_manufacturer_id'];
         }
 
         return $map;

@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and this 
 ## [Unreleased]
 
 ### Added
+- **Synonym-aware conflict collapsing** — `/v2/mapping/product` rows now carry
+  `synonymIds`; during `topdata:mapper:import`, conflict candidates that are
+  synonym pairs collapse to a single representative product (lowest
+  `topdata_product_id`) instead of staying ambiguous, and their mapping
+  previews are pruned.
 - **`topdata:mapper:import` prints the DSL definition** — the canonical
   strategy string is now printed below the matching-strategy table, so the
   run shows both the flat leaf overview and the exact DSL configured.

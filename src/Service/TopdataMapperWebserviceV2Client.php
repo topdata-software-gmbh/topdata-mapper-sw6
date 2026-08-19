@@ -23,9 +23,10 @@ class TopdataMapperWebserviceV2Client extends AbstractTopdataWebserviceV2Client
 
     /**
      * Fetch product identifier mappings (bulk, unified v2 keyset pagination).
-     * Response payload: {rows: [{topdataProductId, topdataBrandIds?, ean?, mpn?, pcd?, articleNumbers?}], pagination: {cursor, limit, next_cursor, has_more}}.
+     * Response payload: {rows: [{topdataProductId, topdataBrandIds?, ean?, mpn?, pcd?, articleNumbers?, synonymIds}], pagination: {cursor, limit, next_cursor, has_more}}.
      * topdataBrandIds is present iff mpn is requested; articleNumbers is an
-     * object keyed by provider id → per-provider article-number list.
+     * object keyed by provider id → per-provider article-number list;
+     * synonymIds is always present (empty list when the product has none).
      *
      * @param string[] $types identifier dimensions to include (ean/mpn/pcd/articleNumbers)
      * @param int|null $cursor last topdataProductId of the previous page (null = first page)
@@ -76,12 +77,12 @@ class TopdataMapperWebserviceV2Client extends AbstractTopdataWebserviceV2Client
     public function getProvidersFast(int $start, int $limit, string $language): mixed
     {
         $config = $this->systemConfigService->get(self::CONFIG_KEY);
-        $url = rtrim((string)($config['apiBaseUrl'] ?? ''), '/')
+        $url    = rtrim((string) ($config['apiBaseUrl'] ?? ''), '/')
             . '/v2/mapping/provider?'
             . http_build_query([
                 'start'    => $start,
                 'limit'    => $limit,
-                'api_key'  => (string)($config['apiKey'] ?? ''),
+                'api_key'  => (string) ($config['apiKey'] ?? ''),
                 'language' => $language,
             ]);
 
