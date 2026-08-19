@@ -191,10 +191,10 @@ class TdmpMappingBuildService
                     continue;
                 }
                 $rows[] = [
-                    'brand_id'          => $brandId,
-                    'topdata_brand_id'  => (int)$apiRow->id,
-                    'created_at'        => $now,
-                    'updated_at'        => $now,
+                    'product_manufacturer_id' => $brandId,
+                    'topdata_brand_id'        => (int)$apiRow->id,
+                    'created_at'              => $now,
+                    'updated_at'              => $now,
                 ];
             }
 
@@ -212,23 +212,24 @@ class TdmpMappingBuildService
     }
 
     /**
-     * @return array<string, string> normalized manufacturer name → brand_id hex
+     * @return array<string, string> normalized manufacturer name → product_manufacturer_id hex
      */
     private function _loadShopBrandMap(): array
     {
         $rows = $this->connection->fetchAllAssociative(
-            'SELECT LOWER(HEX(pm.id)) AS brand_id, MIN(pmt.name) AS name
+            'SELECT LOWER(HEX(pm.id)) AS product_manufacturer_id, MIN(pmt.name) AS name
              FROM product_manufacturer pm
              JOIN product_manufacturer_translation pmt
                ON pmt.product_manufacturer_id = pm.id
               AND pmt.product_manufacturer_version_id = pm.version_id
              WHERE pmt.name IS NOT NULL
+               AND pm.version_id = 0x' . TdmpBrandService::LIVE_VERSION_HEX . '
              GROUP BY pm.id, pm.version_id'
         );
 
         $map = [];
         foreach ($rows as $row) {
-            $map[UtilIdentifierNormalizer::normalizeLabel((string)$row['name'])] = $row['brand_id'];
+            $map[UtilIdentifierNormalizer::normalizeLabel((string)$row['name'])] = $row['product_manufacturer_id'];
         }
 
         return $map;

@@ -411,7 +411,7 @@ class ProductMappingMatcher_Dsl implements ProductMappingMatcherInterface
                 'SELECT tb.topdata_brand_id, LOWER(HEX(p.id)) AS product_id
                    FROM tdmp_brand tb
                    JOIN product p
-                     ON p.manufacturer = tb.brand_id
+                     ON p.manufacturer = tb.product_manufacturer_id
                     AND p.version_id = 0x' . TdmpProductService::LIVE_VERSION_HEX
             );
 

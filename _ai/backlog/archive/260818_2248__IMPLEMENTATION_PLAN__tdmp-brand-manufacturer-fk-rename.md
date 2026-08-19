@@ -3,7 +3,8 @@ filename: "_ai/backlog/active/260818_2248__IMPLEMENTATION_PLAN__tdmp-brand-manuf
 title: "tdmp_brand: rename brand_id to product_manufacturer_id, pin version, add FK to product_manufacturer"
 createdAt: 2026-08-18 22:48
 updatedAt: 2026-08-18 22:48
-status: draft
+status: completed
+completedAt: 2026-08-18 23:59
 priority: medium
 tags: [migration, schema, fk, tdmp_brand, refactor]
 estimatedComplexity: simple

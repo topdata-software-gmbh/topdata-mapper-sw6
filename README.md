@@ -9,7 +9,7 @@ It is the **single writer** of the mapping tables; `TopdataTopFeedSW6` and
 | Table | Purpose |
 |---|---|
 | `tdmp_product` | Topdata `topdata_product_id` ↔ Shopware `product.id` (one row per SW6 variant) |
-| `tdmp_brand` | Topdata `topdata_brand_id` ↔ Shopware `product_manufacturer.id` |
+| `tdmp_brand` | Topdata `topdata_brand_id` ↔ Shopware `product_manufacturer.id` (pinned to the live version) |
 | `tdmp_product_conflict_resolutions` | Conflicts (product matched >1 Topdata article): candidate ids + identifier previews, auto/user status |
 
 ## Data source

@@ -32,12 +32,16 @@ class Migration2026081300CreateTdmpTables extends MigrationStep
 
         $connection->executeStatement('
             CREATE TABLE IF NOT EXISTS `tdmp_brand` (
-                `brand_id`           binary(16) NOT NULL,
-                `topdata_brand_id`   bigint(20) NOT NULL,
-                `created_at`         DATETIME(3) NOT NULL,
-                `updated_at`         DATETIME(3) NOT NULL,
-                PRIMARY KEY (`brand_id`, `topdata_brand_id`),
-                KEY `idx_tdmp_brand_topdata_brand_id` (`topdata_brand_id`)
+                `product_manufacturer_id`          binary(16) NOT NULL,
+                `product_manufacturer_version_id`  binary(16) NOT NULL,
+                `topdata_brand_id`                 bigint(20) NOT NULL,
+                `created_at`                       DATETIME(3) NOT NULL,
+                `updated_at`                       DATETIME(3) NOT NULL,
+                PRIMARY KEY (`product_manufacturer_id`, `product_manufacturer_version_id`, `topdata_brand_id`),
+                KEY `idx_tdmp_brand_topdata_brand_id` (`topdata_brand_id`),
+                CONSTRAINT `fk_tdmp_brand_product_manufacturer`
+                    FOREIGN KEY (`product_manufacturer_id`, `product_manufacturer_version_id`)
+                    REFERENCES `product_manufacturer` (`id`, `version_id`) ON DELETE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ');
     }

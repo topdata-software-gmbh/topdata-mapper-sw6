@@ -5,6 +5,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and this 
 
 ## [Unreleased]
 
+### Changed
+
+- `tdmp_brand`: `brand_id` renamed to `product_manufacturer_id`, new
+  `product_manufacturer_version_id` column (pinned to the live version) and a
+  composite FK to `product_manufacturer(id, version_id)` with `ON DELETE
+  CASCADE` — internal rename, no consumer impact (TopFeed / TopFinder never
+  read this table).
+
 ### Removed
 - **Help tooltip on the DSL textarea** — the question-mark help icon next to
   the DSL input is gone; the DSL-Hilfe modal remains the single source of

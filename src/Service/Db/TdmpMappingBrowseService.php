@@ -111,7 +111,7 @@ class TdmpMappingBrowseService
      * Paginated brand mappings (tdmp_brand) enriched with the SW6 manufacturer
      * name. Search matches the manufacturer name or the Topdata brand id.
      *
-     * @return array{rows: list<array{brandId: string, manufacturerName: string, topdataBrandId: int, createdAt: string, updatedAt: string}>, total: int}
+     * @return array{rows: list<array{manufacturerId: string, manufacturerName: string, topdataBrandId: int, createdAt: string, updatedAt: string}>, total: int}
      */
     public function listBrandMappings(int $page, int $limit, ?string $search): array
     {
@@ -129,31 +129,37 @@ class TdmpMappingBrowseService
         $total = (int)$this->connection->fetchOne(
             "SELECT COUNT(*)
                FROM tdmp_brand mb
-               JOIN product_manufacturer pm ON pm.id = mb.brand_id
+               JOIN product_manufacturer pm
+                 ON pm.id = mb.product_manufacturer_id
+                AND pm.version_id = mb.product_manufacturer_version_id
                LEFT JOIN (
-                   SELECT product_manufacturer_id, MAX(name) AS name
+                   SELECT product_manufacturer_id, product_manufacturer_version_id, MAX(name) AS name
                      FROM product_manufacturer_translation
-                    GROUP BY product_manufacturer_id
+                    GROUP BY product_manufacturer_id, product_manufacturer_version_id
                ) pmt
-                 ON pmt.product_manufacturer_id = mb.brand_id
+                 ON pmt.product_manufacturer_id = mb.product_manufacturer_id
+                AND pmt.product_manufacturer_version_id = mb.product_manufacturer_version_id
               {$whereSql}",
             $params
         );
 
         [$sql, $sqlParams] = $this->_buildPageSql(
-            "SELECT LOWER(HEX(mb.brand_id)) AS brand_id,
+            "SELECT LOWER(HEX(mb.product_manufacturer_id)) AS product_manufacturer_id,
                     pmt.name AS manufacturer_name,
                     mb.topdata_brand_id,
                     mb.created_at,
                     mb.updated_at
                FROM tdmp_brand mb
-               JOIN product_manufacturer pm ON pm.id = mb.brand_id
+               JOIN product_manufacturer pm
+                 ON pm.id = mb.product_manufacturer_id
+                AND pm.version_id = mb.product_manufacturer_version_id
                LEFT JOIN (
-                   SELECT product_manufacturer_id, MAX(name) AS name
+                   SELECT product_manufacturer_id, product_manufacturer_version_id, MAX(name) AS name
                      FROM product_manufacturer_translation
-                    GROUP BY product_manufacturer_id
+                    GROUP BY product_manufacturer_id, product_manufacturer_version_id
                ) pmt
-                 ON pmt.product_manufacturer_id = mb.brand_id
+                 ON pmt.product_manufacturer_id = mb.product_manufacturer_id
+                AND pmt.product_manufacturer_version_id = mb.product_manufacturer_version_id
               {$whereSql}
               ORDER BY manufacturer_name ASC",
             $params,
@@ -166,7 +172,7 @@ class TdmpMappingBrowseService
         $result = [];
         foreach ($rows as $row) {
             $result[] = [
-                'brandId'          => $row['brand_id'],
+                'manufacturerId'   => $row['product_manufacturer_id'],
                 'manufacturerName' => (string)($row['manufacturer_name'] ?? ''),
                 'topdataBrandId'   => (int)$row['topdata_brand_id'],
                 'createdAt'        => (string)$row['created_at'],
