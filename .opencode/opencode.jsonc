@@ -1,0 +1,6 @@
+{
+  // Inherit global rules from discovered AGENTS.md files
+  "instructions": [
+    "../../../../../../AGENTS.md"
+  ]
+}
