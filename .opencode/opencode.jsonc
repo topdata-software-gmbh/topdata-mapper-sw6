@@ -1,4 +1,5 @@
 {
+  "$schema": "https://opencode.ai/config.json",
   // Inherit global rules from discovered AGENTS.md files
   "instructions": [
     "../../../../../../AGENTS.md"
