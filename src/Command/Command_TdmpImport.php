@@ -65,6 +65,10 @@ class Command_TdmpImport extends AbstractTopdataCommand
             return self::FAILURE;
         }
 
+        if (!$this->ensureWebserviceHealthy($this->mapperClient)) {
+            return self::FAILURE;
+        }
+
         $mapping = strtolower((string)$input->getOption('mapping'));
 
         if ($mapping !== 'brand') {
